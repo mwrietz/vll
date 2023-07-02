@@ -23,7 +23,6 @@ fn main() -> io::Result<()> {
     let mut log_files = find_log_files()?;
     log_files.sort();
     let last_log_file = log_files.last().expect("last log file not found");
-    //let last_log_file = &log_files[0];
 
     if let Err(err) = display_log_file(last_log_file) {
         eprintln!("Error: {}", err);
@@ -71,17 +70,11 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
     let th = (terminal_height - VIEWTOP) as usize - 1;
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
-            //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-            //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
-            //println!("{}: {}\r", format!("{}", i + offset).red(), line);
             let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
             print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
         }
     } else {
-        //for (i, line) in lines.iter().take(th - 1).enumerate() {
         for (i, line) in lines.iter().take(th).enumerate() {
-            //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-            //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
             let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
             print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
         }
@@ -95,11 +88,8 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                 KeyCode::Char('q') => break,
                 KeyCode::Char('k') if offset > 0 => {
                     offset -= 1;
-                    //execute!(stdout, Clear(ClearType::All))?;
                     execute!(stdout, MoveTo(0, VIEWTOP))?;
                     for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                        //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-                        //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
                         execute!(stdout, Clear(ClearType::CurrentLine))?;
                         let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
                         print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
@@ -108,11 +98,8 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                 KeyCode::Char('j') => {
                     if (offset + th - 1) < lines.len() - 1 {
                         offset += 1;
-                        //execute!(stdout, Clear(ClearType::All))?;
                         execute!(stdout, MoveTo(0, VIEWTOP))?;
                         for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                            //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-                            //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
                             execute!(stdout, Clear(ClearType::CurrentLine))?;
                             let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
                             print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
@@ -121,11 +108,8 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                 }
                 KeyCode::Char('g') => {
                     offset = 0;
-                    //execute!(stdout, Clear(ClearType::All))?;
                     execute!(stdout, MoveTo(0, VIEWTOP))?;
                     for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                        //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-                        //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
                         execute!(stdout, Clear(ClearType::CurrentLine))?;
                         let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
                         print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
@@ -137,11 +121,8 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                     } else {
                         offset = 0;
                     }
-                    //execute!(stdout, Clear(ClearType::All))?;
                     execute!(stdout, MoveTo(0, VIEWTOP))?;
                     for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                        //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-                        //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
                         execute!(stdout, Clear(ClearType::CurrentLine))?;
                         let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
                         print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
@@ -154,11 +135,8 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                         } else {
                             offset = lines.len() - th;
                         }
-                        //execute!(stdout, Clear(ClearType::All))?;
                         execute!(stdout, MoveTo(0, VIEWTOP))?;
                         for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                            //writeln!(stdout, "{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'))?;
-                            //println!("{}: {}\r", format!("{}", i+offset).red(), line.trim_matches('"'));
                             execute!(stdout, Clear(ClearType::CurrentLine))?;
                             let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
                             print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);

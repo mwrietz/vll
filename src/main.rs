@@ -17,9 +17,6 @@ use crossterm::{
 use std::fs::File;
 use std::io::{self, BufRead};
 
-mod tui_gen;
-mod tui_menu;
-
 const VIEWTOP: u16 = 2;
 
 fn main() -> io::Result<()> {
@@ -29,67 +26,6 @@ fn main() -> io::Result<()> {
 
     if let Err(err) = display_log_file(last_log_file) {
         eprintln!("Error: {}", err);
-    }
-
-    let menu_items = vec![("n", "Next"), ("p", "Previous"),("l", "Last"), ("q", "Quit")];
-
-    let mut n_log = log_files.len() - 1;
-    loop {
-        tui_gen::cls();
-        println!(
-            "{} {} {}{}",
-            "View Last Log:".blue(),
-            get_prog_name().green(),
-            "v".green(),
-            env!("CARGO_PKG_VERSION").green(),
-        );
-        tui_gen::horiz_line("blue");
-
-        println!();
-        print!("{} ", "     previous:".blue());
-        if n_log < (log_files.len() - 1) {
-            println!("{:?}", &log_files[n_log + 1].file_name().unwrap()); 
-        } else {
-            println!("{}", format!("{:?}", &log_files[n_log].file_name().unwrap()).yellow()); 
-        }
-
-        println!();
-        print!("{} ", "  last viewed:".blue());
-        if n_log == (log_files.len() - 1) || n_log == 0 {
-            println!("{}", format!("{:?}", &log_files[n_log].file_name().unwrap()).yellow()); 
-        } else {
-            println!("{:?}", &log_files[n_log].file_name().unwrap()); 
-        }
-
-        println!();
-        print!("{} ", "         next:".blue());
-        if n_log > 0 {
-            println!("{:?}", &log_files[n_log - 1].file_name().unwrap()); 
-        } else {
-            println!("{}", format!("{:?}", &log_files[n_log].file_name().unwrap()).yellow()); 
-        }
-    
-
-        let val = tui_menu::menu_horiz(&menu_items);
-        match val {
-            'n' => {
-                if n_log > 0 {
-                    n_log -= 1;
-                }
-            }
-            'p' => {
-                if n_log < log_files.len() - 1 {
-                    n_log += 1;
-                }
-            }
-            'q' => break,
-            _ => {},
-        };
-        let log_file = &log_files[n_log];
-
-        if let Err(err) = display_log_file(log_file) {
-            eprintln!("Error: {}", err);
-        }
     }
 
     Ok(())
@@ -102,6 +38,9 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
 
     let file = File::open(file_path)?;
     let reader = io::BufReader::new(file);
+
+    let (terminal_width, terminal_height) = crossterm::terminal::size()?;
+
     let all_lines = reader.lines().collect::<Result<Vec<String>>>()?;
 
     // strip lines containing directories only
@@ -112,8 +51,6 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
         }
     }
 
-    let (terminal_width, terminal_height) = crossterm::terminal::size()?;
-    let th = (terminal_height - VIEWTOP) as usize - 1;
     let mut offset = 0;
 
     execute!(stdout, Hide)?;
@@ -130,6 +67,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
 
     execute!(stdout, MoveTo(0, VIEWTOP))?;
 
+    let th = (terminal_height - VIEWTOP) as usize - 1;
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
             let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);

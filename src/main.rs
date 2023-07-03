@@ -26,76 +26,85 @@ fn main() -> io::Result<()> {
     let mut log_files = find_log_files()?;
     log_files.sort();
     let last_log_file = log_files.last().expect("last log file not found");
+    let mut i_log = log_files.len() - 1;
+    let n_logs = log_files.len();
 
     if let Err(err) = display_log_file(last_log_file) {
         eprintln!("Error: {}", err);
     }
 
-    let menu_items = vec![("n", "Next"), ("p", "Previous"),("l", "Last"), ("q", "Quit")];
+    let menu_items = vec![
+        ("n", "Next"),
+        ("p", "Previous"),
+        ("l", "Last"),
+        ("q", "Quit"),
+    ];
 
-    let mut n_log = log_files.len() - 1;
     loop {
         tui_gen::cls();
-        println!(
-            "{} {} {}{}",
-            "View Last Log:".blue(),
-            get_prog_name().green(),
-            "v".green(),
-            env!("CARGO_PKG_VERSION").green(),
-        );
+        display_header("");
         tui_gen::horiz_line("blue");
 
         println!();
         print!("{}", "       # logs: ".blue());
-        println!("{}", format!("{:5}", log_files.len()).red());
+        println!("{}", format!("{:5}", n_logs).red());
         println!();
 
-        println!("{}", "                 #          log-name".blue());
+        println!("{}", "                   # log-name".blue());
         println!("{}", "               ----- -----------------------".blue());
+
         print!("{} ", "     previous:".blue());
-        if n_log < (log_files.len() - 1) {
-            print!("{}", format!("{:5} ", n_log + 1 + 1).red());
-            println!("{:?}", &log_files[n_log + 1].file_name().unwrap()); 
+        if i_log < (n_logs - 1) {
+            print!("{}", format!("{:5} ", i_log + 1 + 1).red());
+            println!("{:?}", &log_files[i_log + 1].file_name().unwrap());
         } else {
-            print!("{}", format!("{:5} ", n_log + 1).red());
-            println!("{}", format!("{:?}", &log_files[n_log].file_name().unwrap()).yellow()); 
+            print!("{}", format!("{:5} ", i_log + 1).red());
+            println!(
+                "{}",
+                format!("{:?}", &log_files[i_log].file_name().unwrap()).yellow()
+            );
         }
 
         print!("{} ", "  last viewed:".blue());
-        if n_log == (log_files.len() - 1) || n_log == 0 {
-            print!("{}", format!("{:5} ", n_log + 1).red());
-            println!("{}", format!("{:?}", &log_files[n_log].file_name().unwrap()).yellow()); 
+        if i_log == (n_logs - 1) || i_log == 0 {
+            print!("{}", format!("{:5} ", i_log + 1).red());
+            println!(
+                "{}",
+                format!("{:?}", &log_files[i_log].file_name().unwrap()).yellow()
+            );
         } else {
-            print!("{}", format!("{:5} ", n_log + 1).red());
-            println!("{:?}", &log_files[n_log].file_name().unwrap()); 
+            print!("{}", format!("{:5} ", i_log + 1).red());
+            println!("{:?}", &log_files[i_log].file_name().unwrap());
         }
 
         print!("{} ", "         next:".blue());
-        if n_log > 0 {
-            print!("{}", format!("{:5} ", n_log - 1 + 1).red());
-            println!("{:?}", &log_files[n_log - 1].file_name().unwrap()); 
+        if i_log > 0 {
+            print!("{}", format!("{:5} ", i_log - 1 + 1).red());
+            println!("{:?}", &log_files[i_log - 1].file_name().unwrap());
         } else {
-            print!("{}", format!("{:5} ", n_log + 1).red());
-            println!("{}", format!("{:?}", &log_files[n_log].file_name().unwrap()).yellow()); 
+            print!("{}", format!("{:5} ", i_log + 1).red());
+            println!(
+                "{}",
+                format!("{:?}", &log_files[i_log].file_name().unwrap()).yellow()
+            );
         }
-    
 
         let val = tui_menu::menu_horiz(&menu_items);
         match val {
             'n' => {
-                if n_log > 0 {
-                    n_log -= 1;
+                if i_log > 0 {
+                    i_log -= 1;
                 }
             }
             'p' => {
-                if n_log < log_files.len() - 1 {
-                    n_log += 1;
+                if i_log < n_logs - 1 {
+                    i_log += 1;
                 }
             }
             'q' => break,
-            _ => {},
+            _ => {}
         };
-        let log_file = &log_files[n_log];
+        let log_file = &log_files[i_log];
 
         if let Err(err) = display_log_file(log_file) {
             eprintln!("Error: {}", err);
@@ -129,15 +138,8 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
     execute!(stdout, Hide)?;
     execute!(stdout, Clear(ClearType::All))?;
     execute!(stdout, MoveTo(0, 0))?;
-    println!(
-        "{} {} {}{} {:?}",
-        "View Last Log:".blue(),
-        get_prog_name().green(),
-        "v".green(),
-        env!("CARGO_PKG_VERSION").green(),
-        file_path.file_name().unwrap()
-    );
-
+    let fname = file_path.file_name().unwrap().to_str().unwrap();
+    display_header(fname);
     execute!(stdout, MoveTo(0, VIEWTOP))?;
 
     if lines.len() < th {
@@ -242,4 +244,16 @@ fn print_without_wrapping(text: &str, max_width: usize) {
     } else {
         println!("{}\r", &remaining[..max_width]);
     }
+}
+
+fn display_header(file_name: &str) {
+    println!(
+        //"{} {} {}{} {:?}",
+        "{} {} {}{} {}",
+        "View Last Log:".blue(),
+        get_prog_name().green(),
+        "v".green(),
+        env!("CARGO_PKG_VERSION").green(),
+        file_name
+    );
 }

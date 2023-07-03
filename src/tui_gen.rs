@@ -6,8 +6,8 @@ use crossterm::{
     style::{Color, Print, ResetColor, SetForegroundColor, Stylize},
 };
 use getch::Getch;
-use std::io::{stdout, Write};
 use std::env;
+use std::io::{stdout, Write};
 
 fn clr(c: &str) -> Color {
     let c_upper: &str = &c.to_uppercase();
@@ -83,7 +83,8 @@ pub fn print_color(my_str: &str, color: &str) {
         SetForegroundColor(clr(color)),
         Print(my_str),
         ResetColor
-    ).expect("print_color error");
+    )
+    .expect("print_color error");
 }
 
 pub fn print_color_bold(my_str: &str, color: &str) {
@@ -92,7 +93,8 @@ pub fn print_color_bold(my_str: &str, color: &str) {
         SetForegroundColor(clr(color)),
         Print(my_str.bold()),
         ResetColor
-    ).expect("print_color_bold error");
+    )
+    .expect("print_color_bold error");
 }
 
 pub fn print_title(title_string: &str, color: &str) {

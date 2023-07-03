@@ -83,37 +83,23 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
     stdout.flush()?;
 
     loop {
+        let mut update = false;
         if let Event::Key(event) = event::read()? {
             match event.code {
                 KeyCode::Char('q') => break,
                 KeyCode::Char('k') if offset > 0 => {
                     offset -= 1;
-                    execute!(stdout, MoveTo(0, VIEWTOP))?;
-                    for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                        execute!(stdout, Clear(ClearType::CurrentLine))?;
-                        let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
-                        print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
-                    }
+                    update = true;
                 }
                 KeyCode::Char('j') => {
                     if (offset + th - 1) < lines.len() - 1 {
                         offset += 1;
-                        execute!(stdout, MoveTo(0, VIEWTOP))?;
-                        for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                            execute!(stdout, Clear(ClearType::CurrentLine))?;
-                            let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
-                            print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
-                        }
+                        update = true;
                     }
                 }
                 KeyCode::Char('g') => {
                     offset = 0;
-                    execute!(stdout, MoveTo(0, VIEWTOP))?;
-                    for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                        execute!(stdout, Clear(ClearType::CurrentLine))?;
-                        let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
-                        print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
-                    }
+                    update = true;
                 }
                 KeyCode::Char('G') => {
                     if lines.len() > th {
@@ -121,12 +107,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                     } else {
                         offset = 0;
                     }
-                    execute!(stdout, MoveTo(0, VIEWTOP))?;
-                    for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                        execute!(stdout, Clear(ClearType::CurrentLine))?;
-                        let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
-                        print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
-                    }
+                    update = true;
                 }
                 KeyCode::Char(' ') => {
                     if lines.len() > th {
@@ -135,15 +116,18 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                         } else {
                             offset = lines.len() - th;
                         }
-                        execute!(stdout, MoveTo(0, VIEWTOP))?;
-                        for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                            execute!(stdout, Clear(ClearType::CurrentLine))?;
-                            let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
-                            print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
-                        }
+                        update = true;
                     }
                 }
                 _ => {}
+            }
+            if update {
+                execute!(stdout, MoveTo(0, VIEWTOP))?;
+                for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
+                    execute!(stdout, Clear(ClearType::CurrentLine))?;
+                    let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
+                    print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
+                }
             }
             stdout.flush()?;
         }

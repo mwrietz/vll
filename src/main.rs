@@ -20,98 +20,127 @@ use std::io::{self, BufRead};
 mod tui_gen;
 mod tui_menu;
 
-const VIEWTOP: u16 = 2;
+const VIEWTOP: u16 = 3;
+const VIEWBOT: u16 = 2;
 
-fn main() -> io::Result<()> {
-    let mut log_files = find_log_files()?;
+fn main() {
+    let mut log_files = find_log_files().expect(format!("{}", "log files not found - cd to log dir".red()).as_str());
     log_files.sort();
-    let last_log_file = log_files.last().expect("last log file not found");
-    let mut i_log = log_files.len() - 1;
-    let n_logs = log_files.len();
+    let last_log_file = log_files.last().expect(format!("{}", "last log files not found".red()).as_str());
 
     if let Err(err) = display_log_file(last_log_file) {
         eprintln!("Error: {}", err);
     }
 
-    let menu_items = vec![
-        ("n", "Next"),
-        ("p", "Previous"),
-        ("l", "Last"),
-        ("q", "Quit"),
-    ];
-
     loop {
-        tui_gen::cls();
-        display_header("");
-        tui_gen::horiz_line("blue");
-
-        println!();
-        print!("{}", "       # logs: ".blue());
-        println!("{}", format!("{:5}", n_logs).red());
-        println!();
-
-        println!("{}", "                   # log-name".blue());
-        println!("{}", "               ----- -----------------------".blue());
-
-        print!("{} ", "     previous:".blue());
-        if i_log < (n_logs - 1) {
-            print!("{}", format!("{:5} ", i_log + 1 + 1).red());
-            println!("{:?}", &log_files[i_log + 1].file_name().unwrap());
-        } else {
-            print!("{}", format!("{:5} ", i_log + 1).red());
-            println!(
-                "{}",
-                format!("{:?}", &log_files[i_log].file_name().unwrap()).yellow()
-            );
-        }
-
-        print!("{} ", "  last viewed:".blue());
-        if i_log == (n_logs - 1) || i_log == 0 {
-            print!("{}", format!("{:5} ", i_log + 1).red());
-            println!(
-                "{}",
-                format!("{:?}", &log_files[i_log].file_name().unwrap()).yellow()
-            );
-        } else {
-            print!("{}", format!("{:5} ", i_log + 1).red());
-            println!("{:?}", &log_files[i_log].file_name().unwrap());
-        }
-
-        print!("{} ", "         next:".blue());
-        if i_log > 0 {
-            print!("{}", format!("{:5} ", i_log - 1 + 1).red());
-            println!("{:?}", &log_files[i_log - 1].file_name().unwrap());
-        } else {
-            print!("{}", format!("{:5} ", i_log + 1).red());
-            println!(
-                "{}",
-                format!("{:?}", &log_files[i_log].file_name().unwrap()).yellow()
-            );
-        }
-
-        let val = tui_menu::menu_horiz(&menu_items);
-        match val {
-            'n' => {
-                if i_log > 0 {
-                    i_log -= 1;
-                }
-            }
-            'p' => {
-                if i_log < n_logs - 1 {
-                    i_log += 1;
-                }
-            }
-            'q' => break,
-            _ => {}
-        };
-        let log_file = &log_files[i_log];
+        let log_file = &display_vector_items(&log_files);
 
         if let Err(err) = display_log_file(log_file) {
             eprintln!("Error: {}", err);
         }
     }
+}
 
-    Ok(())
+fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
+    let (_terminal_width, terminal_height) = crossterm::terminal::size().unwrap();
+    let mut offset = 0;
+    let mut display_limit = terminal_height as usize - 8;
+    let mut current_line = 0;
+
+    if vector.len() < display_limit {
+        display_limit = vector.len();
+    }
+
+    tui_gen::cls();
+    display_header("");
+
+    let menu_items = vec![
+        ("j", "Scroll_Dn"),
+        ("k", "Scroll_Up"),
+        ("s", "Select"),
+        ("q", "Quit"),
+    ];
+
+    let mut stdout = io::stdout();
+
+    let mut v = vector.clone();
+    v.reverse();
+
+    loop {
+        execute!(stdout, MoveTo(0, 3)).unwrap();
+
+        print!(" Select file to display: (");
+        print!("{}", format!("{} logs", v.len()).red());
+        println!(")");
+        println!();
+        // Display the vector items
+        //for (index, item) in vector.iter().enumerate().skip(offset).take(display_limit) {
+        for (index, item) in v.iter().enumerate().skip(offset).take(display_limit) {
+            let buffer = format!("{:?}", item.as_path().file_name().unwrap());
+            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            if index - offset == current_line {
+                // Highlight the current line
+                print!("    {}: ", format!("{:5}", index).red());
+                println!("{}", buffer.trim_matches('"').green());
+            } else {
+                print!("    {}: ", format!("{:5}", index).red());
+                println!("{}", buffer.trim_matches('"'));
+            }
+        }
+
+        let input = tui_menu::menu_horiz(&menu_items);
+
+        match input {
+            'j' => {
+                if current_line < display_limit - 1 && current_line < vector.len() - offset - 1 {
+                    current_line += 1;
+                }
+                if current_line == display_limit - 1 && current_line < vector.len() - offset - 1 {
+                    offset += 1;
+                }
+            }
+            'k' => {
+                if current_line > 0 {
+                    current_line -= 1;
+                }
+                if current_line == 0 && offset > 0 {
+                    offset -= 1;
+                }
+            }
+            'q' => std::process::abort(),
+            's' => break,
+            _ => break,
+        }
+    }
+
+    // Return the selected item
+    //vector.get(offset + current_line).unwrap().to_path_buf()
+    v.get(offset + current_line).unwrap().to_path_buf()
+}
+
+fn display_bottom_menu() {
+    let mut stdout = io::stdout();
+    let (_terminal_width, terminal_height) = crossterm::terminal::size().unwrap();
+    execute!(stdout, MoveTo(0, terminal_height - 2)).unwrap();
+    tui_gen::horiz_line("blue");
+    execute!(stdout, MoveTo(0, terminal_height - 1)).unwrap();
+
+    let menu_items = vec![
+        ("j", "Scroll_DN"),
+        ("k", "Scroll_UP"),
+        ("g", "Top"),
+        ("G", "Bottom"),
+        ("<space>", "Page_DN"),
+        ("q", "Quit"),
+    ];
+
+    for item in menu_items {
+        print!("   {}", item.0.green());
+        print!(":{}", item.1);
+    }
+
+    //print!(" j:Scroll_DN  k:Scroll_UP  g:Top  G:Bottom  <space>:Page_DN  q:Quit ");
+    stdout.flush().unwrap();
 }
 
 fn display_log_file(file_path: &PathBuf) -> Result<()> {
@@ -132,7 +161,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
     }
 
     let (terminal_width, terminal_height) = crossterm::terminal::size()?;
-    let th = (terminal_height - VIEWTOP) as usize - 1;
+    let th = (terminal_height - VIEWTOP - VIEWBOT) as usize - 1;
     let mut offset = 0;
 
     execute!(stdout, Hide)?;
@@ -144,17 +173,19 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
 
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
-            let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
+            let buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), line);
             print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
         }
     } else {
         for (i, line) in lines.iter().take(th).enumerate() {
-            let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
+            let buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), line);
             print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
         }
     }
 
     stdout.flush()?;
+
+    display_bottom_menu();
 
     loop {
         let mut update = false;
@@ -200,7 +231,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                     execute!(stdout, MoveTo(0, VIEWTOP))?;
                     for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
                         execute!(stdout, Clear(ClearType::CurrentLine))?;
-                        let buff = format!("{}: {}\r", format!("{}", i + offset).red(), line);
+                        let buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), line);
                         print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
                     }
                 }
@@ -247,13 +278,17 @@ fn print_without_wrapping(text: &str, max_width: usize) {
 }
 
 fn display_header(file_name: &str) {
+    let mut stdout = io::stdout();
     println!(
         //"{} {} {}{} {:?}",
         "{} {} {}{} {}",
-        "View Last Log:".blue(),
+        " View Last Log:".blue(),
         get_prog_name().green(),
         "v".green(),
         env!("CARGO_PKG_VERSION").green(),
         file_name
     );
+
+    execute!(stdout, MoveTo(0, 1)).unwrap();
+    tui_gen::horiz_line("blue");
 }

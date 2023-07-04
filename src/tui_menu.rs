@@ -72,6 +72,11 @@ pub fn menu_horiz(items: &Vec<(&str, &str)>) -> char {
         let g = Getch::new();
         _a = g.getch().unwrap();
 
+        // if <return> then change to 's'
+        if _a == 10 {
+            _a = 115;
+        }
+
         for item in items.iter() {
             let ch = item.0.chars().nth(0).unwrap();
             if (_a as char) == ch {

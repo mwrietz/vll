@@ -1,3 +1,9 @@
+// todo:
+//
+// refactor clear line
+// maintain file list highlighted when quitting file view
+//
+
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -34,6 +40,62 @@ fn main() {
     }
 }
 
+fn display_file_head(file_path: &PathBuf) {
+
+    let mut stdout = io::stdout();
+
+    let file = File::open(file_path).unwrap();
+    let reader = io::BufReader::new(file);
+    let all_lines = reader.lines().collect::<Result<Vec<String>>>().unwrap();
+
+    // strip lines containing directories only
+    let mut lines = Vec::new();
+    for l in all_lines {
+        if !l.ends_with("/") && !l.starts_with(" ") {
+            lines.push(l.clone());
+        }
+    }
+
+    let (terminal_width, terminal_height) = tui_gen::tsize();
+    let th = (terminal_height as usize - VIEWTOP - VIEWBOT - 20) - 1;
+
+    tui_gen::cmove(0, VIEWTOP + 14);
+    println!(" File preview...");
+    println!();
+
+    if lines.len() < th {
+        for (i, line) in lines.iter().enumerate() {
+            let l = line.as_str();
+            let mut _buff = String::from("");
+            let max_width = terminal_width - 12;
+            if l.len() > max_width {
+                _buff = format!("     {}: {}\r", format!("{:4}", i).red(), format!("{}", &l[..max_width]).grey());
+            } else {
+                _buff = format!("     {}: {}\r", format!("{:4}", i).red(), format!("{}", l).grey());
+            }
+            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            println!("{}", _buff);
+        }
+        for _ in 0..(th - lines.len()) {
+            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            println!();
+        }
+    } else {
+        for (i, line) in lines.iter().take(th).enumerate() {
+            let l = line.as_str();
+            let mut _buff = String::from("");
+            let max_width = terminal_width - 12;
+            if l.len() > max_width {
+                _buff = format!("     {}: {}\r", format!("{:4}", i).red(), format!("{}", &l[..max_width]).grey());
+            } else {
+                _buff = format!("     {}: {}\r", format!("{:4}", i).red(), format!("{}", l).grey());
+            }
+            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            println!("{}", _buff);
+        }
+    }
+}
+
 fn display_log_file(file_path: &PathBuf) -> Result<()> {
     let mut stdout = io::stdout();
 
@@ -49,7 +111,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
         }
     }
 
-    let (terminal_width, terminal_height) = crossterm::terminal::size()?;
+    let (terminal_width, terminal_height) = tui_gen::tsize();
     let th = (terminal_height as usize - VIEWTOP - VIEWBOT) - 1;
     let mut offset = 0;
 
@@ -61,13 +123,28 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
 
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
-            let buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), line);
-            print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
+            let l = line.as_str();
+            let mut _buff = String::from("");
+            let max_width:usize = terminal_width - 6;
+            
+            if l.len() > max_width {
+                _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), &l[0..max_width]);
+            } else {
+                _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
+            }
+            println!("{}", _buff);
         }
     } else {
         for (i, line) in lines.iter().take(th).enumerate() {
-            let buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), line);
-            print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
+            let l = line.as_str();
+            let mut _buff = String::from("");
+            let max_width: usize = terminal_width - 6;
+            if l.len() > max_width {
+                _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), &l[..max_width]);
+            } else {
+                _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
+            }
+            println!("{}", _buff);
         }
     }
 
@@ -123,9 +200,16 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
             if lines.len() > th {
                 tui_gen::cmove(0, VIEWTOP);
                 for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
+                    let l = line.as_str();
+                    let mut _buff = String::from("");
+                    let max_width: usize = terminal_width - 6;
                     execute!(stdout, Clear(ClearType::CurrentLine))?;
-                    let buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), line);
-                    print_without_wrapping(buff.as_str(), (terminal_width - 1) as usize);
+                    if l.len() > max_width {
+                        _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), &l[..max_width]);
+                    } else {
+                        _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
+                    }
+                    println!("{}", _buff);
                 }
             }
         }
@@ -137,7 +221,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
 fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
     let (_terminal_width, terminal_height) = crossterm::terminal::size().unwrap();
     let mut offset = 0;
-    let mut display_limit = terminal_height as usize - 8;
+    let mut display_limit = 10;
     let mut current_line = 0;
 
     if vector.len() < display_limit {
@@ -166,16 +250,19 @@ fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
         print!("{}", format!("{} logs", v.len()).red());
         println!(")");
         println!();
+        let mut current_index: usize = 0;
         for (index, item) in v.iter().enumerate().skip(offset).take(display_limit) {
             let buffer = format!("{:?}", item.as_path().file_name().unwrap());
             execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
             print!("    {}: ", format!("{:5}", index).red());
             if index - offset == current_line {
-                println!("{}", buffer.trim_matches('"').green());
+                println!("{} {}", buffer.trim_matches('"').dark_green().bold(), "*".dark_green().bold());
+                current_index = index;
             } else {
                 println!("{}", buffer.trim_matches('"'));
             }
         }
+        display_file_head(&v[current_index]);
 
         let input = tui_menu::menu_horiz(&menu_items);
 
@@ -230,23 +317,13 @@ fn get_prog_name() -> String {
     prog_name
 }
 
-fn print_without_wrapping(text: &str, max_width: usize) {
-    let remaining = text;
-
-    if remaining.len() <= max_width {
-        println!("{}", remaining);
-    } else {
-        println!("{}\r", &remaining[..max_width]);
-    }
-}
-
 fn display_header(file_name: &str) {
     println!(
         "{} {} {}{} {}",
         " View Last Log:".blue(),
-        get_prog_name().green(),
+        get_prog_name().dark_green().bold(),
         "v".green(),
-        env!("CARGO_PKG_VERSION").green(),
+        env!("CARGO_PKG_VERSION").dark_green().bold(),
         file_name
     );
 

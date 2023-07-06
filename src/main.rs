@@ -1,6 +1,6 @@
 // todo:
 //
-// refactor clear line
+// + refactor clear line
 // maintain file list highlighted when quitting file view
 //
 
@@ -9,9 +9,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crossterm::{
-    execute,
     style::Stylize,
-    terminal::{Clear, ClearType},
     Result,
 };
 use std::fs::File;
@@ -19,6 +17,13 @@ use std::io::{self, BufRead};
 
 mod tui_gen;
 mod tui_menu;
+
+struct ViewStatus {
+    current_index: usize,
+    current_line: usize,
+    offset: usize,
+    display_limit: usize,
+}
 
 const VIEWTOP: usize = 3;
 const VIEWBOT: usize = 2;
@@ -32,8 +37,15 @@ fn main() {
         eprintln!("Error: {}", err);
     }
 
+    let mut vs = ViewStatus {
+        current_index: 0,
+        current_line: 0,
+        offset: 0,
+        display_limit: 10,
+    };
+
     loop {
-        let log_file = &display_vector_items(&log_files);
+        let log_file = &display_vector_items(&log_files, &mut vs);
         if let Err(err) = display_log_file(log_file) {
             eprintln!("Error: {}", err);
         }
@@ -41,9 +53,6 @@ fn main() {
 }
 
 fn display_file_head(file_path: &PathBuf) {
-
-    let mut stdout = io::stdout();
-
     let file = File::open(file_path).unwrap();
     let reader = io::BufReader::new(file);
     let all_lines = reader.lines().collect::<Result<Vec<String>>>().unwrap();
@@ -73,11 +82,11 @@ fn display_file_head(file_path: &PathBuf) {
             } else {
                 _buff = format!("     {}: {}\r", format!("{:4}", i).red(), format!("{}", l).grey());
             }
-            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            tui_gen::clear_line();
             println!("{}", _buff);
         }
         for _ in 0..(th - lines.len()) {
-            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            tui_gen::clear_line();
             println!();
         }
     } else {
@@ -90,15 +99,13 @@ fn display_file_head(file_path: &PathBuf) {
             } else {
                 _buff = format!("     {}: {}\r", format!("{:4}", i).red(), format!("{}", l).grey());
             }
-            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            tui_gen::clear_line();
             println!("{}", _buff);
         }
     }
 }
 
 fn display_log_file(file_path: &PathBuf) -> Result<()> {
-    let mut stdout = io::stdout();
-
     let file = File::open(file_path)?;
     let reader = io::BufReader::new(file);
     let all_lines = reader.lines().collect::<Result<Vec<String>>>()?;
@@ -203,7 +210,7 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
                     let l = line.as_str();
                     let mut _buff = String::from("");
                     let max_width: usize = terminal_width - 6;
-                    execute!(stdout, Clear(ClearType::CurrentLine))?;
+                    tui_gen::clear_line();
                     if l.len() > max_width {
                         _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), &l[..max_width]);
                     } else {
@@ -218,14 +225,15 @@ fn display_log_file(file_path: &PathBuf) -> Result<()> {
     Ok(())
 }
 
-fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
-    let (_terminal_width, terminal_height) = crossterm::terminal::size().unwrap();
-    let mut offset = 0;
-    let mut display_limit = 10;
-    let mut current_line = 0;
+fn display_vector_items(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
+    //let (_terminal_width, terminal_height) = crossterm::terminal::size().unwrap();
+    let (_terminal_width, terminal_height) = tui_gen::tsize();
+    // let mut offset = 0;
+    // let mut display_limit = 10;
+    // let mut current_line = 0;
 
-    if vector.len() < display_limit {
-        display_limit = vector.len();
+    if vector.len() < vs.display_limit {
+        vs.display_limit = vector.len();
     }
 
     tui_gen::cls();
@@ -238,10 +246,10 @@ fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
         ("q", "Quit"),
     ];
 
-    let mut stdout = io::stdout();
-
     let mut v = vector.clone();
     v.reverse();
+
+    vs.current_index = 0;
 
     loop {
         tui_gen::cmove(0, VIEWTOP);
@@ -250,42 +258,42 @@ fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
         print!("{}", format!("{} logs", v.len()).red());
         println!(")");
         println!();
-        let mut current_index: usize = 0;
-        for (index, item) in v.iter().enumerate().skip(offset).take(display_limit) {
+        //let mut current_index: usize = 0;
+        for (index, item) in v.iter().enumerate().skip(vs.offset).take(vs.display_limit) {
             let buffer = format!("{:?}", item.as_path().file_name().unwrap());
-            execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+            tui_gen::clear_line();
             print!("    {}: ", format!("{:5}", index).red());
-            if index - offset == current_line {
+            if index - vs.offset == vs.current_line {
                 println!("{} {}", buffer.trim_matches('"').dark_green().bold(), "*".dark_green().bold());
-                current_index = index;
+                vs.current_index = index;
             } else {
                 println!("{}", buffer.trim_matches('"'));
             }
         }
-        display_file_head(&v[current_index]);
+        display_file_head(&v[vs.current_index]);
 
         let input = tui_menu::menu_horiz(&menu_items);
 
         match input {
             'j' => {
-                if current_line < display_limit - 1 && current_line < vector.len() - offset - 1 {
-                    current_line += 1;
+                if vs.current_line < vs.display_limit - 1 && vs.current_line < vector.len() - vs.offset - 1 {
+                    vs.current_line += 1;
                 }
-                if current_line == display_limit - 1 && current_line < vector.len() - offset - 1 {
-                    offset += 1;
+                if vs.current_line == vs.display_limit - 1 && vs.current_line < vector.len() - vs.offset - 1 {
+                    vs.offset += 1;
                 }
             }
             'k' => {
-                if current_line > 0 {
-                    current_line -= 1;
+                if vs.current_line > 0 {
+                    vs.current_line -= 1;
                 }
-                if current_line == 0 && offset > 0 {
-                    offset -= 1;
+                if vs.current_line == 0 && vs.offset > 0 {
+                    vs.offset -= 1;
                 }
             }
             'q' => {
                 tui_gen::cmove(0, terminal_height as usize);
-                execute!(stdout, Clear(ClearType::CurrentLine)).unwrap();
+                tui_gen::clear_line();
                 std::process::exit(1);
             }
             's' => break,
@@ -293,7 +301,7 @@ fn display_vector_items(vector: &Vec<PathBuf>) -> PathBuf {
         }
     }
 
-    v.get(offset + current_line).unwrap().to_path_buf()
+    v.get(vs.offset + vs.current_line).unwrap().to_path_buf()
 }
 
 fn find_log_files() -> io::Result<Vec<PathBuf>> {

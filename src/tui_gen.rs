@@ -4,6 +4,7 @@
 use crossterm::{
     cursor, execute,
     style::{Color, Print, ResetColor, SetForegroundColor, Stylize},
+    terminal::{Clear, ClearType},
 };
 use getch::Getch;
 use std::env;
@@ -31,6 +32,10 @@ fn clr(c: &str) -> Color {
 
 pub fn cls() {
     std::process::Command::new("clear").status().unwrap();
+}
+
+pub fn clear_line() {
+    execute!(stdout(), Clear(ClearType::CurrentLine)).unwrap();
 }
 
 pub fn cmove(x: usize, y: usize) {

@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-//use colored::Colorize;
 use crossterm::{
     cursor, execute,
     style::{Color, Print, ResetColor, SetForegroundColor, Stylize},
@@ -10,26 +9,6 @@ use getch::Getch;
 use std::env;
 use std::io::{stdout, Write};
 
-fn clr(c: &str) -> Color {
-    let c_upper: &str = &c.to_uppercase();
-    match c_upper {
-        "RED" => Color::Red,
-        "DARKRED" => Color::DarkRed,
-        "BLUE" => Color::Blue,
-        "DARKBLUE" => Color::DarkBlue,
-        "CYAN" => Color::Cyan,
-        "DARKCYAN" => Color::DarkCyan,
-        "GREEN" => Color::Green,
-        "DARKGREEN" => Color::DarkGreen,
-        "GREY" => Color::Grey,
-        "YELLOW" => Color::Yellow,
-        "DARKYELLOW" => Color::DarkYellow,
-        "MAGENTA" => Color::Magenta,
-        "DARKMAGENTA" => Color::DarkMagenta,
-        _ => Color::White,
-    }
-}
-
 pub fn cls() {
     std::process::Command::new("clear").status().unwrap();
 }
@@ -38,7 +17,7 @@ pub fn clear_line() {
     execute!(stdout(), Clear(ClearType::CurrentLine)).unwrap();
 }
 
-pub fn cmove(x: usize, y: usize) {
+pub fn cursor_move(x: usize, y: usize) {
     execute!(stdout(), cursor::MoveTo(x as u16, y as u16)).unwrap();
 }
 
@@ -52,15 +31,9 @@ pub fn get_prog_name() -> String {
     prog_name
 }
 
-pub fn horiz_line(color: &str) {
-    // for _i in 0..80 {
-    //     //print!("{}", "─".color(color).bold());
-    //     print_color_bold("─", color);
-    // }
-    // println!("");
-    let (width, _height) = tsize();
+pub fn horiz_line(color: Color) {
+    let (width, _) = tsize();
     for _i in 0..width as usize {
-        //print!("{}", "─".color(color).bold());
         print_color_bold("─", color);
     }
     println!("");
@@ -69,44 +42,41 @@ pub fn horiz_line(color: &str) {
 pub fn pause() {
     let (w, h) = tsize();
     let clear_message = "                            ";
-    //let message = "Press any key to continue...".blue();
     let message = "Press any key to continue...";
     let message_len: usize = message.len();
-    cmove((w - message_len) / 2, h - 2);
-    //print!("{}", message);
-    print_color(message, "DARKBLUE");
+    cursor_move((w - message_len) / 2, h - 2);
+    print_color(message, Color::DarkBlue);
     std::io::stdout().flush().unwrap();
     let g = Getch::new();
     let _keypress = g.getch().unwrap();
-    cmove((w - message_len) / 2, h - 2);
+    cursor_move((w - message_len) / 2, h - 2);
     print!("{}", clear_message);
 }
 
-pub fn print_color(my_str: &str, color: &str) {
+pub fn print_color(my_str: &str, color: Color) {
     execute!(
         stdout(),
-        SetForegroundColor(clr(color)),
+        SetForegroundColor(color),
         Print(my_str),
         ResetColor
     )
     .expect("print_color error");
 }
 
-pub fn print_color_bold(my_str: &str, color: &str) {
+pub fn print_color_bold(my_str: &str, color: Color) {
     execute!(
         stdout(),
-        SetForegroundColor(clr(color)),
+        SetForegroundColor(color),
         Print(my_str.bold()),
         ResetColor
     )
     .expect("print_color_bold error");
 }
 
-pub fn print_title(title_string: &str, color: &str) {
+pub fn print_title(title_string: &str, color: Color) {
     println!("");
     for c in title_string.chars() {
         print!("{}", " ");
-        //print!("{}", c.to_string().color(color).bold());
         print_color_bold(&c.to_string(), color);
     }
     println!("");
@@ -115,18 +85,15 @@ pub fn print_title(title_string: &str, color: &str) {
 }
 
 pub fn splash_screen(line1: &str, line2: &str) {
-    //const VERSION: &str = env!("CARGO_PKG_VERSION");
-
     cls();
     let (width, height) = tsize();
 
     let line1_length: usize = line1.len();
-    cmove(width / 2 - line1_length / 2, height / 2 - 1);
-    //println!("{}", line1.bold());
-    print_color_bold(line1, "WHITE");
+    cursor_move(width / 2 - line1_length / 2, height / 2 - 1);
+    print_color_bold(line1, Color::White);
 
     let line2_length: usize = line2.len();
-    cmove(width / 2 - line2_length / 2, height / 2 + 1);
+    cursor_move(width / 2 - line2_length / 2, height / 2 + 1);
     println!("{}", line2);
 
     execute!(stdout(), cursor::Hide).unwrap();
@@ -173,7 +140,7 @@ impl TermStat {
         if y > (self.height - 5) {
             pause();
             cls();
-            cmove(0, 0);
+            cursor_move(0, 0);
         }
     }
 }

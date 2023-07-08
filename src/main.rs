@@ -1,6 +1,3 @@
-// todo:
-// clear line after file list and after file head after each j/k move
-//
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -22,8 +19,8 @@ struct ViewStatus {
     display_limit: usize,
 }
 
-const HEADERSIZE: usize = 3;
-const FOOTERSIZE: usize = 2;
+const HEADERHEIGHT: usize = 3;
+const FOOTERHEIGHT: usize = 2;
 
 fn main() {
     let mut log_files = find_log_files()
@@ -62,9 +59,9 @@ fn display_file_head(file_path: &PathBuf) {
     }
 
     let (terminal_width, terminal_height) = tui_gen::tsize();
-    let th = (terminal_height as usize - HEADERSIZE - FOOTERSIZE - 20) - 1;
+    let th = (terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT - 20) - 1;
 
-    tui_gen::cursor_move(0, HEADERSIZE + 14);
+    tui_gen::cursor_move(0, HEADERHEIGHT + 14);
     println!(" File preview...");
     println!();
 
@@ -115,6 +112,7 @@ fn display_file_head(file_path: &PathBuf) {
             println!("{}", _buff);
         }
     }
+    tui_gen::clear_line();
 }
 
 fn display_header(file_name: &str) {
@@ -147,14 +145,14 @@ fn display_log_file(file_path: &PathBuf) {
     }
 
     let (terminal_width, terminal_height) = tui_gen::tsize();
-    let th = (terminal_height as usize - HEADERSIZE - FOOTERSIZE) - 1;
+    let th = (terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT) - 1;
     let mut offset = 0;
 
     let fname = file_path.file_name().unwrap().to_str().unwrap();
 
     tui_gen::cls();
     display_header(fname);
-    tui_gen::cursor_move(0, HEADERSIZE);
+    tui_gen::cursor_move(0, HEADERHEIGHT);
 
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
@@ -241,7 +239,7 @@ fn display_log_file(file_path: &PathBuf) {
         }
         if update {
             if lines.len() > th {
-                tui_gen::cursor_move(0, HEADERSIZE);
+                tui_gen::cursor_move(0, HEADERHEIGHT);
                 for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
                     let l = line.as_str();
                     let mut _buff = String::from("");
@@ -309,7 +307,7 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
     vs.current_index = 0;
 
     loop {
-        tui_gen::cursor_move(0, HEADERSIZE);
+        tui_gen::cursor_move(0, HEADERHEIGHT);
 
         print!(" Select file to display: (");
         print!("{}", format!("{} logs", v.len()).red());

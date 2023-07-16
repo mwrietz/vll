@@ -65,7 +65,9 @@ fn display_file_head(file_path: &PathBuf) {
     let (terminal_width, terminal_height) = tui_gen::tsize();
     let th = terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT - 16;
 
-    tui_gen::cursor_move(0, HEADERHEIGHT + 13);
+    //tui_gen::cursor_move(0, HEADERHEIGHT + 13);
+
+    println!();
     println!(" File preview...");
     println!();
 

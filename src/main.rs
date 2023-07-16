@@ -1,7 +1,3 @@
-// todo
-// start file preview immediately following file list if less than 10 files
-// 
-//
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -201,6 +197,7 @@ fn display_log_file(file_path: &PathBuf) {
         ("d", "Page_DN"),
         ("g", "Top"),
         ("G", "Bottom"),
+        ("s", "Select_Log"),
         ("q", "Quit"),
     ];
 
@@ -208,7 +205,12 @@ fn display_log_file(file_path: &PathBuf) {
         let mut update = false;
         let input = tui_menu::menu_horiz(&menu_items);
         match input {
-            'q' => break,
+            's' => break,
+            'q' => {
+                tui_gen::cursor_move(0, terminal_height as usize);
+                tui_gen::clear_line();
+                std::process::exit(1);
+            }
             'k' if offset > 0 => {
                 offset -= 1;
                 update = true;

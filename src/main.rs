@@ -1,3 +1,7 @@
+// todo
+// start file preview immediately following file list if less than 10 files
+// 
+//
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -59,9 +63,9 @@ fn display_file_head(file_path: &PathBuf) {
     }
 
     let (terminal_width, terminal_height) = tui_gen::tsize();
-    let th = (terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT - 20) - 1;
+    let th = terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT - 16;
 
-    tui_gen::cursor_move(0, HEADERHEIGHT + 14);
+    tui_gen::cursor_move(0, HEADERHEIGHT + 13);
     println!(" File preview...");
     println!();
 
@@ -258,7 +262,6 @@ fn display_log_file(file_path: &PathBuf) {
                 }
             }
         }
-        // test this
         tui_gen::clear_line();
     }
 }
@@ -312,7 +315,6 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
         print!(" Select file to display: (");
         print!("{}", format!("{} logs", v.len()).red());
         println!(")");
-        // test this
         tui_gen::clear_line();
 
         println!();
@@ -332,7 +334,6 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
             }
         }
 
-        // test this
         tui_gen::clear_line();
 
         display_file_head(&v[vs.current_index]);

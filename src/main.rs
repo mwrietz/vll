@@ -96,7 +96,7 @@ fn display_file_head(file_path: &PathBuf) {
         for (i, line) in lines.iter().take(th).enumerate() {
             let l = line.as_str();
             let mut _buff = String::from("");
-            let max_width = terminal_width - 12;
+            let max_width = terminal_width - 14;
             if l.len() > max_width {
                 _buff = format!(
                     "     {}: {}\r",
@@ -160,7 +160,7 @@ fn display_log_file(file_path: &PathBuf) {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
             let l = line.as_str();
             let mut _buff = String::from("");
-            let max_width: usize = terminal_width - 6;
+            let max_width: usize = terminal_width - 14;
 
             if l.len() > max_width {
                 _buff = format!(

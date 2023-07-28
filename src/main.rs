@@ -1,3 +1,7 @@
+// todo
+// - [ ] losing header when pressing s:Select
+// - line numbering when viewing entire file is incorrect
+
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -58,7 +62,7 @@ fn display_file_head(file_path: &PathBuf) {
         }
     }
 
-    let (terminal_width, terminal_height) = tui_gen::tsize();
+    let (_terminal_width, terminal_height) = tui_gen::tsize();
     let th = terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT - 16;
 
     //tui_gen::cursor_move(0, HEADERHEIGHT + 13);
@@ -70,23 +74,24 @@ fn display_file_head(file_path: &PathBuf) {
     if lines.len() < th {
         for (i, line) in lines.iter().enumerate() {
             let l = line.as_str();
-            let mut _buff = String::from("");
-            let max_width = terminal_width - 14;
-            if l.len() > max_width {
-                _buff = format!(
-                    "     {}: {}\r",
-                    format!("{:4}", i).red(),
-                    format!("{}", &l[..max_width]).grey()
-                );
-            } else {
-                _buff = format!(
-                    "     {}: {}\r",
-                    format!("{:4}", i).red(),
-                    format!("{}", l).grey()
-                );
-            }
-            tui_gen::clear_line();
-            println!("{}", _buff);
+            display_line_grey(i, l);
+            // let mut _buff = String::from("");
+            // let max_width = terminal_width - 14;
+            // if l.len() > max_width {
+            //     _buff = format!(
+            //         "     {}: {}\r",
+            //         format!("{:4}", i).red(),
+            //         format!("{}", &l[..max_width]).grey()
+            //     );
+            // } else {
+            //     _buff = format!(
+            //         "     {}: {}\r",
+            //         format!("{:4}", i).red(),
+            //         format!("{}", l).grey()
+            //     );
+            // }
+            // tui_gen::clear_line();
+            // println!("{}", _buff);
         }
         for _ in 0..(th - lines.len()) {
             tui_gen::clear_line();
@@ -95,23 +100,24 @@ fn display_file_head(file_path: &PathBuf) {
     } else {
         for (i, line) in lines.iter().take(th).enumerate() {
             let l = line.as_str();
-            let mut _buff = String::from("");
-            let max_width = terminal_width - 14;
-            if l.len() > max_width {
-                _buff = format!(
-                    "     {}: {}\r",
-                    format!("{:4}", i).red(),
-                    format!("{}", &l[..max_width]).grey()
-                );
-            } else {
-                _buff = format!(
-                    "     {}: {}\r",
-                    format!("{:4}", i).red(),
-                    format!("{}", l).grey()
-                );
-            }
-            tui_gen::clear_line();
-            println!("{}", _buff);
+            display_line_grey(i, l);
+            // let mut _buff = String::from("");
+            // let max_width = terminal_width - 14;
+            // if l.len() > max_width {
+            //     _buff = format!(
+            //         "     {}: {}\r",
+            //         format!("{:4}", i).red(),
+            //         format!("{}", &l[..max_width]).grey()
+            //     );
+            // } else {
+            //     _buff = format!(
+            //         "     {}: {}\r",
+            //         format!("{:4}", i).red(),
+            //         format!("{}", l).grey()
+            //     );
+            // }
+            // tui_gen::clear_line();
+            // println!("{}", _buff);
         }
     }
     tui_gen::clear_line();
@@ -131,6 +137,50 @@ fn display_header(file_name: &str) {
     tui_gen::horiz_line(Color::Blue);
 }
 
+fn display_line(i: usize, l: &str) {
+    let (terminal_width, _terminal_height) = tui_gen::tsize();
+
+    let mut _buff = String::from("");
+    let max_width = terminal_width - 14;
+    if l.len() > max_width {
+        _buff = format!(
+            "     {}: {}\r",
+            format!("{:4}", i).red(),
+            format!("{}", &l[..max_width])
+        );
+    } else {
+        _buff = format!(
+            "     {}: {}\r",
+            format!("{:4}", i).red(),
+            format!("{}", l)
+        );
+    }
+    tui_gen::clear_line();
+    println!("{}", _buff);
+}
+
+fn display_line_grey(i: usize, l: &str) {
+    let (terminal_width, _terminal_height) = tui_gen::tsize();
+
+    let mut _buff = String::from("");
+    let max_width = terminal_width - 14;
+    if l.len() > max_width {
+        _buff = format!(
+            "     {}: {}\r",
+            format!("{:4}", i).red(),
+            format!("{}", &l[..max_width]).grey()
+        );
+    } else {
+        _buff = format!(
+            "     {}: {}\r",
+            format!("{:4}", i).red(),
+            format!("{}", l).grey()
+        );
+    }
+    tui_gen::clear_line();
+    println!("{}", _buff);
+}
+
 fn display_log_file(file_path: &PathBuf) {
     let file = File::open(file_path).expect("cannot open file_path");
     let reader = io::BufReader::new(file);
@@ -146,7 +196,7 @@ fn display_log_file(file_path: &PathBuf) {
         }
     }
 
-    let (terminal_width, terminal_height) = tui_gen::tsize();
+    let (_terminal_width, terminal_height) = tui_gen::tsize();
     let th = (terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT) - 1;
     let mut offset = 0;
 
@@ -159,35 +209,37 @@ fn display_log_file(file_path: &PathBuf) {
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
             let l = line.as_str();
-            let mut _buff = String::from("");
-            let max_width: usize = terminal_width - 14;
-
-            if l.len() > max_width {
-                _buff = format!(
-                    "{}: {}\r",
-                    format!("{:4}", i + offset).red(),
-                    &l[0..max_width]
-                );
-            } else {
-                _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
-            }
-            println!("{}", _buff);
+            display_line(i, l);
+            // let mut _buff = String::from("");
+            // let max_width: usize = terminal_width - 14;
+            //
+            // if l.len() > max_width {
+            //     _buff = format!(
+            //         "{}: {}\r",
+            //         format!("{:4}", i + offset).red(),
+            //         &l[0..max_width]
+            //     );
+            // } else {
+            //     _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
+            // }
+            // println!("{}", _buff);
         }
     } else {
         for (i, line) in lines.iter().take(th).enumerate() {
             let l = line.as_str();
-            let mut _buff = String::from("");
-            let max_width: usize = terminal_width - 14;
-            if l.len() > max_width {
-                _buff = format!(
-                    "{}: {}\r",
-                    format!("{:4}", i + offset).red(),
-                    &l[..max_width]
-                );
-            } else {
-                _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
-            }
-            println!("{}", _buff);
+            display_line(i, l);
+            // let mut _buff = String::from("");
+            // let max_width: usize = terminal_width - 14;
+            // if l.len() > max_width {
+            //     _buff = format!(
+            //         "{}: {}\r",
+            //         format!("{:4}", i + offset).red(),
+            //         &l[..max_width]
+            //     );
+            // } else {
+            //     _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
+            // }
+            // println!("{}", _buff);
         }
     }
 
@@ -250,19 +302,20 @@ fn display_log_file(file_path: &PathBuf) {
                 tui_gen::cursor_move(0, HEADERHEIGHT);
                 for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
                     let l = line.as_str();
-                    let mut _buff = String::from("");
-                    let max_width: usize = terminal_width - 14;
-                    tui_gen::clear_line();
-                    if l.len() > max_width {
-                        _buff = format!(
-                            "{}: {}\r",
-                            format!("{:4}", i + offset).red(),
-                            &l[..max_width]
-                        );
-                    } else {
-                        _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
-                    }
-                    println!("{}", _buff);
+                    display_line(i, l);
+                    // let mut _buff = String::from("");
+                    // let max_width: usize = terminal_width - 14;
+                    // tui_gen::clear_line();
+                    // if l.len() > max_width {
+                    //     _buff = format!(
+                    //         "{}: {}\r",
+                    //         format!("{:4}", i + offset).red(),
+                    //         &l[..max_width]
+                    //     );
+                    // } else {
+                    //     _buff = format!("{}: {}\r", format!("{:4}", i + offset).red(), l);
+                    // }
+                    // println!("{}", _buff);
                 }
             }
         }

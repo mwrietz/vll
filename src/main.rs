@@ -251,7 +251,7 @@ fn display_log_file(file_path: &PathBuf) {
                 for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
                     let l = line.as_str();
                     let mut _buff = String::from("");
-                    let max_width: usize = terminal_width - 6;
+                    let max_width: usize = terminal_width - 14;
                     tui_gen::clear_line();
                     if l.len() > max_width {
                         _buff = format!(

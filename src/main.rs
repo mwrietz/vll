@@ -173,12 +173,12 @@ fn display_log_file(file_path: &PathBuf) {
     if lines.len() < th {
         for (i, line) in lines[offset..(lines.len())].iter().enumerate() {
             let l = line.as_str();
-            display_line(i, l);
+            display_line(i + offset, l);
         }
     } else {
         for (i, line) in lines.iter().take(th).enumerate() {
             let l = line.as_str();
-            display_line(i, l);
+            display_line(i + offset, l);
         }
     }
 
@@ -241,7 +241,7 @@ fn display_log_file(file_path: &PathBuf) {
                 tui_gen::cursor_move(0, HEADERHEIGHT);
                 for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
                     let l = line.as_str();
-                    display_line(i, l);
+                    display_line(i + offset, l);
                 }
             }
         }

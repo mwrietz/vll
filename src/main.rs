@@ -88,17 +88,20 @@ fn display_file_head(file_path: &PathBuf) {
 }
 
 fn display_header(file_name: &str) {
-    println!(
-        "{} {} {}{} {}",
-        " View Last Log:".blue(),
-        get_prog_name().dark_green().bold(),
-        "v".dark_green().bold(),
-        env!("CARGO_PKG_VERSION").dark_green().bold(),
-        file_name
-    );
-
-    tui_gen::cursor_move(0, 1);
-    tui_gen::horiz_line(Color::Blue);
+    // println!(
+    //     "{} {} {}{} {}",
+    //     " View Last Log:".blue(),
+    //     get_prog_name().dark_green().bold(),
+    //     "v".dark_green().bold(),
+    //     env!("CARGO_PKG_VERSION").dark_green().bold(),
+    //     file_name
+    // );
+    //
+    // tui_gen::cursor_move(0, 1);
+    // tui_gen::horiz_line(Color::Blue);
+    tui_gen::print_page_header("View Last Log:");
+    tui_gen::cursor_move(29, 1);
+    tui_gen::print_color(file_name, Color::White);
 }
 
 fn display_line(i: usize, l: &str) {
@@ -194,7 +197,7 @@ fn display_log_file(file_path: &PathBuf) {
 
     loop {
         let mut update = false;
-        let input = tui_menu::menu_horiz(&menu_items);
+        let input = tui_menu::menu_horiz_neo(&menu_items);
         match input {
             's' => break,
             'q' => {
@@ -260,15 +263,15 @@ fn find_log_files() -> io::Result<Vec<PathBuf>> {
     Ok(log_files)
 }
 
-fn get_prog_name() -> String {
-    let prog_name = env::current_exe()
-        .expect("Can't get the exec path")
-        .file_name()
-        .expect("Can't get the exec name")
-        .to_string_lossy()
-        .into_owned();
-    prog_name
-}
+// fn get_prog_name() -> String {
+//     let prog_name = env::current_exe()
+//         .expect("Can't get the exec path")
+//         .file_name()
+//         .expect("Can't get the exec name")
+//         .to_string_lossy()
+//         .into_owned();
+//     prog_name
+// }
 
 fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
     let (_, terminal_height) = tui_gen::tsize();

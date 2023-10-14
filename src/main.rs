@@ -324,7 +324,7 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
 
         display_file_head(&v[vs.current_index]);
 
-        let input = tui_menu::menu_horiz(&menu_items);
+        let input = tui_menu::menu_horiz_neo(&menu_items);
 
         match input {
             'j' => {

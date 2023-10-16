@@ -101,7 +101,7 @@ fn display_header(file_name: &str) {
     // tui_gen::horiz_line(Color::Blue);
     tui_gen::print_page_header("View Last Log:");
     tui_gen::cursor_move(29, 1);
-    tui_gen::print_color(file_name, Color::White);
+    tui_gen::print_color(file_name, Color::DarkGreen);
 }
 
 fn display_line(i: usize, l: &str) {
@@ -262,16 +262,6 @@ fn find_log_files() -> io::Result<Vec<PathBuf>> {
         .collect();
     Ok(log_files)
 }
-
-// fn get_prog_name() -> String {
-//     let prog_name = env::current_exe()
-//         .expect("Can't get the exec path")
-//         .file_name()
-//         .expect("Can't get the exec name")
-//         .to_string_lossy()
-//         .into_owned();
-//     prog_name
-// }
 
 fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
     let (_, terminal_height) = tui_gen::tsize();

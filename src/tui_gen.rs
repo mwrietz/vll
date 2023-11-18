@@ -78,15 +78,29 @@ pub fn print_page_header(title: &str) {
     print_title(&title, Color::DarkBlue);
 
     // print version right justified
-    let (w, _h) = tsize(); 
+    let (w, _h) = tsize();
     let prog_name = get_prog_name();
     let version = format!("v{}", env!("CARGO_PKG_VERSION"));
     let offset = prog_name.len() + version.len() + 2;
     cursor_move(w - offset, 1);
 
-    print_color(prog_name.as_str(), Color::Rgb{r:255, g:135, b:0});
+    print_color(
+        prog_name.as_str(),
+        Color::Rgb {
+            r: 255,
+            g: 135,
+            b: 0,
+        },
+    );
     print_color(" ", Color::Black);
-    print_color(version.as_str(), Color::Rgb{r:255, g:135, b:0});
+    print_color(
+        version.as_str(),
+        Color::Rgb {
+            r: 255,
+            g: 135,
+            b: 0,
+        },
+    );
     // print_color(
     //     format!(" v{}", env!("CARGO_PKG_VERSION")).as_str(),
     //    Color::Rgb{r:255, g:135, b:0},
@@ -191,4 +205,3 @@ pub fn tsize() -> (usize, usize) {
     };
     (w as usize, h as usize)
 }
-

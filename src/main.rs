@@ -116,11 +116,7 @@ fn display_line(i: usize, l: &str) {
             format!("{}", &l[..max_width])
         );
     } else {
-        _buff = format!(
-            "{}: {}\r",
-            format!("{:4}", i).red(),
-            format!("{}", l)
-        );
+        _buff = format!("{}: {}\r", format!("{:4}", i).red(), format!("{}", l));
     }
     tui_gen::clear_line();
     println!("{}", _buff);

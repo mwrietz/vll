@@ -24,7 +24,7 @@ pub fn menu(menu_title: &str, items: &Vec<&str>) -> u8 {
         println!("    {}) {}", i + 1, item);
     }
 
-    println!("");
+    println!();
     print!("Selection: ");
     io::stdout().flush().unwrap();
 
@@ -39,7 +39,7 @@ pub fn menu(menu_title: &str, items: &Vec<&str>) -> u8 {
         break;
     }
 
-    println!("");
+    println!();
 
     _a - 48
 }
@@ -58,7 +58,8 @@ pub fn menu(menu_title: &str, items: &Vec<&str>) -> u8 {
 
 //    let val = menu_horiz(menu_items);
 
-pub fn menu_horiz(items: &Vec<(&str, &str)>) -> char {
+//pub fn menu_horiz(items: &Vec<(&str, &str)>) -> char {
+pub fn menu_horiz(items: &[(&str, &str)]) -> char {
     let (_width, height) = tsize();
     cursor_move(0, height - 2);
 
@@ -80,13 +81,13 @@ pub fn menu_horiz(items: &Vec<(&str, &str)>) -> char {
         _a = g.getch().unwrap();
 
         for item in items.iter() {
-            let ch = item.0.chars().nth(0).unwrap();
+            let ch = item.0.chars().next().unwrap();
             if (_a as char) == ch {
                 flag = true;
                 break;
             }
         }
-        if flag == true {
+        if flag {
             break;
         }
     }
@@ -94,7 +95,8 @@ pub fn menu_horiz(items: &Vec<(&str, &str)>) -> char {
     _a as char
 }
 
-pub fn menu_horiz_neo(items: &Vec<(&str, &str)>) -> char {
+//pub fn menu_horiz_neo(items: &Vec<(&str, &str)>) -> char {
+pub fn menu_horiz_neo(items: &[(&str, &str)]) -> char {
     let (_width, height) = tsize();
     cursor_move(0, height - 1);
 
@@ -119,13 +121,13 @@ pub fn menu_horiz_neo(items: &Vec<(&str, &str)>) -> char {
         _a = g.getch().unwrap();
 
         for item in items.iter() {
-            let ch = item.0.chars().nth(0).unwrap();
+            let ch = item.0.chars().next().unwrap();
             if (_a as char) == ch {
                 flag = true;
                 break;
             }
         }
-        if flag == true {
+        if flag {
             break;
         }
     }

@@ -33,10 +33,10 @@ pub fn get_prog_name() -> String {
 
 pub fn horiz_line(color: Color) {
     let (width, _) = tsize();
-    for _i in 0..width as usize {
+    for _i in 0..width {
         print_color_bold("─", color);
     }
-    println!("");
+    println!();
 }
 
 pub fn pause() {
@@ -75,7 +75,7 @@ pub fn print_color_bold(my_str: &str, color: Color) {
 
 pub fn print_page_header(title: &str) {
     //let title = "DEFINITIVE BEER DATABASE";
-    print_title(&title, Color::DarkBlue);
+    print_title(title, Color::DarkBlue);
 
     // print version right justified
     let (w, _h) = tsize();
@@ -112,14 +112,14 @@ pub fn print_page_header(title: &str) {
 }
 
 pub fn print_title(title_string: &str, color: Color) {
-    println!("");
+    println!();
     for c in title_string.chars() {
-        print!("{}", " ");
+        print!(" ");
         print_color_bold(&c.to_string(), color);
     }
-    println!("");
+    println!();
     horiz_line(color);
-    println!("");
+    println!();
 }
 
 pub fn splash_screen(line1: &str, line2: &str) {
@@ -185,7 +185,7 @@ impl TermStat {
 
 pub fn timestamp() -> String {
     let now = chrono::Local::now();
-    return now.to_string();
+    now.to_string()
 }
 
 pub fn tpos() -> (usize, usize) {

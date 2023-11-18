@@ -28,11 +28,11 @@ const FOOTERHEIGHT: usize = 2;
 
 fn main() {
     let mut log_files = find_log_files()
-        .expect(format!("{}", "log files not found - cd to log dir".red()).as_str());
+        .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir".red()));
     log_files.sort();
     let last_log_file = log_files
         .last()
-        .expect(format!("{}", "last log files not found".red()).as_str());
+        .unwrap_or_else(|| panic!("{}", "last log files not found".red()));
 
     display_log_file(last_log_file);
 
@@ -57,13 +57,13 @@ fn display_file_head(file_path: &PathBuf) {
     // strip lines containing directories only
     let mut lines = Vec::new();
     for l in all_lines {
-        if !l.ends_with("/") && !l.starts_with(" ") {
+        if !l.ends_with('/') && !l.starts_with(' ') {
             lines.push(l.clone());
         }
     }
 
     let (_terminal_width, terminal_height) = tui_gen::tsize();
-    let th = terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT - 16;
+    let th = terminal_height - HEADERHEIGHT - FOOTERHEIGHT - 16;
 
     println!();
     println!(" File preview...");
@@ -113,10 +113,12 @@ fn display_line(i: usize, l: &str) {
         _buff = format!(
             "{}: {}\r",
             format!("{:4}", i).red(),
-            format!("{}", &l[..max_width])
+            //format!("{}", &l[..max_width])
+            &l[..max_width]
         );
     } else {
-        _buff = format!("{}: {}\r", format!("{:4}", i).red(), format!("{}", l));
+        //_buff = format!("{}: {}\r", format!("{:4}", i).red(), format!("{}", l));
+        _buff = format!("{}: {}\r", format!("{:4}", i).red(), l);
     }
     tui_gen::clear_line();
     println!("{}", _buff);
@@ -131,13 +133,13 @@ fn display_line_grey(i: usize, l: &str) {
         _buff = format!(
             "     {}: {}\r",
             format!("{:4}", i).red(),
-            format!("{}", &l[..max_width]).grey()
+            (l[..max_width]).to_string().grey()
         );
     } else {
         _buff = format!(
             "     {}: {}\r",
             format!("{:4}", i).red(),
-            format!("{}", l).grey()
+            l.to_string().grey()
         );
     }
     tui_gen::clear_line();
@@ -154,13 +156,13 @@ fn display_log_file(file_path: &PathBuf) {
 
     let mut lines = Vec::new();
     for l in all_lines {
-        if !l.ends_with("/") && !l.starts_with(" ") {
+        if !l.ends_with('/') && !l.starts_with(' ') {
             lines.push(l.clone());
         }
     }
 
     let (_terminal_width, terminal_height) = tui_gen::tsize();
-    let th = (terminal_height as usize - HEADERHEIGHT - FOOTERHEIGHT) - 1;
+    let th = (terminal_height - HEADERHEIGHT - FOOTERHEIGHT) - 1;
     let mut offset = 0;
 
     let fname = file_path.file_name().unwrap().to_str().unwrap();
@@ -197,7 +199,7 @@ fn display_log_file(file_path: &PathBuf) {
         match input {
             's' => break,
             'q' => {
-                tui_gen::cursor_move(0, terminal_height as usize);
+                tui_gen::cursor_move(0, terminal_height);
                 tui_gen::clear_line();
                 std::process::exit(1);
             }
@@ -235,13 +237,11 @@ fn display_log_file(file_path: &PathBuf) {
             }
             _ => {}
         }
-        if update {
-            if lines.len() > th {
-                tui_gen::cursor_move(0, HEADERHEIGHT);
-                for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
-                    let l = line.as_str();
-                    display_line(i + offset, l);
-                }
+        if update && lines.len() > th {
+            tui_gen::cursor_move(0, HEADERHEIGHT);
+            for (i, line) in lines[offset..(offset + th)].iter().enumerate() {
+                let l = line.as_str();
+                display_line(i + offset, l);
             }
         }
         tui_gen::clear_line();
@@ -334,7 +334,7 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
                 }
             }
             'q' => {
-                tui_gen::cursor_move(0, terminal_height as usize);
+                tui_gen::cursor_move(0, terminal_height);
                 tui_gen::clear_line();
                 std::process::exit(1);
             }

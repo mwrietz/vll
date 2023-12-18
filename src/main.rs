@@ -32,7 +32,11 @@ fn main() {
     log_files.sort();
     let last_log_file = log_files
         .last()
-        .unwrap_or_else(|| panic!("{}", "last log files not found".red()));
+        //.unwrap_or_else(|| panic!("{}", "last log file not found".red()));
+        .unwrap_or_else(|| {
+            println!("{}", "last log file not found".red());
+            std::process::exit(1);
+        });
 
     display_log_file(last_log_file);
 

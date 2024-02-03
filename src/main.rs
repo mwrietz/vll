@@ -5,8 +5,10 @@
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use std::io::stdout;
 
 use crossterm::{
+    cursor, execute,
     style::{Color, Stylize},
     Result,
 };
@@ -205,6 +207,7 @@ fn display_log_file(file_path: &PathBuf) {
             'q' => {
                 tui_gen::cursor_move(0, terminal_height);
                 tui_gen::clear_line();
+                show_cursor();
                 std::process::exit(1);
             }
             'k' if offset > 0 => {
@@ -340,6 +343,7 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
             'q' => {
                 tui_gen::cursor_move(0, terminal_height);
                 tui_gen::clear_line();
+                show_cursor();
                 std::process::exit(1);
             }
             's' => break,
@@ -348,4 +352,8 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
     }
 
     v.get(vs.offset + vs.current_line).unwrap().to_path_buf()
+}
+
+fn show_cursor() {
+    execute!(stdout(), cursor::Show).unwrap();
 }

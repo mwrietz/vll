@@ -257,7 +257,7 @@ fn find_log_files() -> io::Result<Vec<PathBuf>> {
     Ok(log_files)
 }
 
-fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
+fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
     let (_, terminal_height) = tui_gen::tsize();
 
     if vector.len() < vs.display_limit {
@@ -274,7 +274,7 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
         ("q", "Quit"),
     ];
 
-    let mut v = vector.clone();
+    let mut v = vector.to_owned();
     v.reverse();
 
     vs.current_index = 0;

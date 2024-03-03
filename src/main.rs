@@ -4,8 +4,8 @@
 
 use std::env;
 use std::fs;
-use std::path::PathBuf;
 use std::io::stdout;
+use std::path::PathBuf;
 
 use crossterm::{
     cursor, execute,
@@ -32,13 +32,10 @@ fn main() {
     let mut log_files = find_log_files()
         .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir".red()));
     log_files.sort();
-    let last_log_file = log_files
-        .last()
-        //.unwrap_or_else(|| panic!("{}", "last log file not found".red()));
-        .unwrap_or_else(|| {
-            println!("{}", "last log file not found".red());
-            std::process::exit(1);
-        });
+    let last_log_file = log_files.last().unwrap_or_else(|| {
+        println!("{}", "last log file not found".red());
+        std::process::exit(1);
+    });
 
     display_log_file(last_log_file);
 
@@ -94,17 +91,6 @@ fn display_file_head(file_path: &PathBuf) {
 }
 
 fn display_header(file_name: &str) {
-    // println!(
-    //     "{} {} {}{} {}",
-    //     " View Last Log:".blue(),
-    //     get_prog_name().dark_green().bold(),
-    //     "v".dark_green().bold(),
-    //     env!("CARGO_PKG_VERSION").dark_green().bold(),
-    //     file_name
-    // );
-    //
-    // tui_gen::cursor_move(0, 1);
-    // tui_gen::horiz_line(Color::Blue);
     tui_gen::print_page_header("View Last Log:");
     tui_gen::cursor_move(29, 1);
     tui_gen::print_color(file_name, Color::DarkGreen);
@@ -116,14 +102,8 @@ fn display_line(i: usize, l: &str) {
     let mut _buff = String::from("");
     let max_width = terminal_width - 14;
     if l.len() > max_width {
-        _buff = format!(
-            "{}: {}\r",
-            format!("{:4}", i).red(),
-            //format!("{}", &l[..max_width])
-            &l[..max_width]
-        );
+        _buff = format!("{}: {}\r", format!("{:4}", i).red(), &l[..max_width]);
     } else {
-        //_buff = format!("{}: {}\r", format!("{:4}", i).red(), format!("{}", l));
         _buff = format!("{}: {}\r", format!("{:4}", i).red(), l);
     }
     tui_gen::clear_line();
@@ -202,7 +182,7 @@ fn display_log_file(file_path: &PathBuf) {
 
     loop {
         let mut update = false;
-        let input = tui_menu::menu_horiz_neo(&menu_items);
+        let input = tui_menu::menu_horiz(&menu_items);
         match input {
             's' => break,
             'q' => {
@@ -233,17 +213,7 @@ fn display_log_file(file_path: &PathBuf) {
                 }
                 update = true;
             }
-            'd' => {
-                if lines.len() > th {
-                    if (offset + th) < (lines.len() - th - 1) {
-                        offset += th;
-                    } else {
-                        offset = lines.len() - th;
-                    }
-                    update = true;
-                }
-            }
-            ' ' => {
+            'd' | ' ' => {
                 if lines.len() > th {
                     if (offset + th) < (lines.len() - th - 1) {
                         offset += th;
@@ -338,7 +308,7 @@ fn select_log_file(vector: &Vec<PathBuf>, vs: &mut ViewStatus) -> PathBuf {
 
         display_file_head(&v[vs.current_index]);
 
-        let input = tui_menu::menu_horiz_neo(&menu_items);
+        let input = tui_menu::menu_horiz(&menu_items);
 
         match input {
             'j' => {

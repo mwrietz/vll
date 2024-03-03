@@ -82,7 +82,7 @@ pub fn menu_horiz(items: &[(&str, &str)]) -> char {
 
         for item in items.iter() {
             let ch = item.0.chars().next().unwrap();
-            if (_a as char) == ch {
+            if (_a as char) == ch || (_a as char) == ' ' {
                 flag = true;
                 break;
             }
@@ -122,7 +122,8 @@ pub fn menu_horiz_neo(items: &[(&str, &str)]) -> char {
 
         for item in items.iter() {
             let ch = item.0.chars().next().unwrap();
-            if (_a as char) == ch {
+            //if (_a as char) == ch {
+            if (_a as char) == ch || (_a as char) == ' ' {
                 flag = true;
                 break;
             }

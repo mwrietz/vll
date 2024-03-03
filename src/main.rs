@@ -243,6 +243,16 @@ fn display_log_file(file_path: &PathBuf) {
                     update = true;
                 }
             }
+            ' ' => {
+                if lines.len() > th {
+                    if (offset + th) < (lines.len() - th - 1) {
+                        offset += th;
+                    } else {
+                        offset = lines.len() - th;
+                    }
+                    update = true;
+                }
+            }
             'b' => {
                 if lines.len() > th {
                     if offset > th {

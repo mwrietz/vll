@@ -193,6 +193,7 @@ fn display_log_file(file_path: &PathBuf) {
         ("j", "Scroll_DN"),
         ("k", "Scroll_UP"),
         ("d", "Page_DN"),
+        ("b", "Page_UP"),
         ("g", "Top"),
         ("G", "Bottom"),
         ("s", "Select_Log"),
@@ -238,6 +239,16 @@ fn display_log_file(file_path: &PathBuf) {
                         offset += th;
                     } else {
                         offset = lines.len() - th;
+                    }
+                    update = true;
+                }
+            }
+            'b' => {
+                if lines.len() > th {
+                    if offset > th {
+                        offset -= th;
+                    } else {
+                        offset = 0;
                     }
                     update = true;
                 }

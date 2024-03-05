@@ -337,7 +337,7 @@ fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
                 show_cursor();
                 std::process::exit(1);
             }
-            's' => break,
+            's' | '\x0A' => break,
             _ => break,
         }
     }

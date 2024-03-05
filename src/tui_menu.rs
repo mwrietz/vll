@@ -34,7 +34,7 @@ pub fn menu_horiz(items: &[(&str, &str)]) -> char {
 
         for item in items.iter() {
             let ch = item.0.chars().next().unwrap();
-            if (_a as char) == ch || (_a as char) == ' ' {
+            if (_a as char) == ch || (_a as char) == ' ' || (_a as char) == '\x0A' {
                 flag = true;
                 break;
             }

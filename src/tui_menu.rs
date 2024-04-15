@@ -18,7 +18,7 @@ pub fn menu_horiz(items: &[(&str, &str)]) -> char {
     print_title_block();
 
     for item in items.iter() {
-        let buffer = format!("{:>4}", item.0);
+        let buffer = format!("{:>3}", item.0);
         print_color(&buffer, Color::DarkGreen);
         let buffer = format!(":{}", item.1);
         print_color(&buffer, Color::Grey);

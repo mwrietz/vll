@@ -91,7 +91,7 @@ pub fn print_page_header(title: &str) {
 pub fn print_title(title_string: &str, color: Color) {
     println!();
     for c in title_string.chars() {
-        print!(" ");
+        //print!(" ");
         print_color_bold(&c.to_string(), color);
     }
     println!();

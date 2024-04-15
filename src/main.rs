@@ -1,19 +1,13 @@
-// todo
-// - [ ] losing header when pressing s:Select
-// - line numbering when viewing entire file is incorrect
-
 use std::env;
-use std::fs;
-use std::io::stdout;
-use std::path::PathBuf;
+use std::fs::{self, File};
+use std::io::{self, BufRead, stdout, Write};
+use std::path::{Path, PathBuf};
 
 use crossterm::{
     cursor, execute,
     style::{Color, Stylize},
     Result,
 };
-use std::fs::File;
-use std::io::{self, BufRead};
 
 mod tui_gen;
 mod tui_menu;
@@ -29,6 +23,9 @@ const HEADERHEIGHT: usize = 3;
 const FOOTERHEIGHT: usize = 2;
 
 fn main() {
+
+    create_log_summary();
+
     let mut log_files = find_log_files()
         .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir".red()));
     log_files.sort();
@@ -49,6 +46,56 @@ fn main() {
     loop {
         let log_file = &select_log_file(&log_files, &mut vs);
         display_log_file(log_file);
+    }
+}
+
+fn create_log_summary() {
+    let mut f = File::create("summary.log").expect("Cannot create file");
+
+    let mut log_files =
+        find_log_files().unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir"));
+    log_files.sort();
+    let last_file = log_files
+        .last()
+        .unwrap()
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .split("/")
+        .last()
+        .unwrap();
+    if last_file == "summary.log" {
+        log_files.pop();
+    }
+    log_files.reverse();
+
+    writeln!(f, "{}", "f=files, c=created, d=deleted, rx=reg.xfer").expect("Cannot write to file");
+
+    for log in log_files {
+        let mut lines = Vec::new();
+        let fname = log.as_os_str().to_str().unwrap();
+        read_file_to_vector(fname, &mut lines);
+
+        let mut buffer = String::from("");
+
+        buffer.push_str(format!("{} | ", fname.split("/").last().unwrap()).as_str());
+        for line in lines {
+            let words: Vec<&str> = line.trim_start().split(' ').collect();
+
+            if words.len() > 6 && words[5] == "files:" {
+                buffer.push_str(format!("f {:7} | ", words[6]).as_str());
+            }
+            if words.len() > 7 && words[5] == "created" {
+                buffer.push_str(format!("c {:7} | ", words[7]).as_str());
+            }
+            if words.len() > 7 && words[5] == "deleted" {
+                buffer.push_str(format!("d {:7} | ", words[7]).as_str());
+            }
+            if words.len() > 8 && words[5] == "regular" {
+                buffer.push_str(format!("rx {:7}", words[8]).as_str());
+            }
+        }
+        writeln!(f, "{}", buffer).expect("Cannot write to file");
     }
 }
 
@@ -91,8 +138,8 @@ fn display_file_head(file_path: &PathBuf) {
 }
 
 fn display_header(file_name: &str) {
-    tui_gen::print_page_header("View Last Log:");
-    tui_gen::cursor_move(29, 1);
+    tui_gen::print_page_header("View Latest Log:");
+    tui_gen::cursor_move(17, 1);
     tui_gen::print_color(file_name, Color::DarkGreen);
 }
 
@@ -345,6 +392,25 @@ fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
     v.get(vs.offset + vs.current_line).unwrap().to_path_buf()
 }
 
+fn read_file_to_vector(filename: &str, vector: &mut Vec<String>) {
+    if let Ok(lines) = read_lines(filename) {
+        for line in lines {
+            if let Ok(ip) = line {
+                vector.push(ip);
+            }
+        }
+    }
+}
+
+fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
+}
+
 fn show_cursor() {
     execute!(stdout(), cursor::Show).unwrap();
 }
+

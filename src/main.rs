@@ -68,12 +68,19 @@ fn create_log_summary() {
     }
     log_files.reverse();
 
-    writeln!(
-        f,
-        "{}",
-        "legend:               | f:   files | c: created | d: deleted | x:reg.xfer |"
-    )
-    .expect("Cannot write to file");
+    let fname_width = log_files[0]
+        .as_os_str()
+        .to_str()
+        .unwrap()
+        .split('/')
+        .last()
+        .unwrap()
+        .len();
+
+    let mut buf = format!("{:width$}", "legend:", width = (fname_width + 1));
+    buf.push_str("| f:   files | c: created | d: deleted | x:reg.xfer |");
+
+    writeln!(f, "{}", buf).expect("Cannot write to file");
 
     for log in log_files {
         let fields: Vec<(&str, &str)> = vec![

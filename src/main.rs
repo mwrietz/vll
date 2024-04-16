@@ -1,6 +1,6 @@
 use std::env;
 use std::fs::{self, File};
-use std::io::{self, BufRead, stdout, Write};
+use std::io::{self, stdout, BufRead, Write};
 use std::path::{Path, PathBuf};
 
 use crossterm::{
@@ -23,7 +23,6 @@ const HEADERHEIGHT: usize = 3;
 const FOOTERHEIGHT: usize = 2;
 
 fn main() {
-
     create_log_summary();
 
     let mut log_files = find_log_files()
@@ -69,10 +68,21 @@ fn create_log_summary() {
     }
     log_files.reverse();
 
-    // writeln!(f, "{}", "f=files, c=created, d=deleted, rx=reg.xfer").expect("Cannot write to file");
-    writeln!(f, "{}", "legend: rf=files, d=dir, l=links, c=created, dl=deleted, rx=reg.xfer").expect("Cannot write to file");
+    writeln!(
+        f,
+        "{}",
+        "legend: f=files, c=created, dl=deleted, rx=reg.xfer"
+    )
+    .expect("Cannot write to file");
 
     for log in log_files {
+        let fields: Vec<(&str, &str)> = vec![
+            ("of files:", "f"),
+            ("created files:", "c"),
+            ("deleted files:", "dl"),
+            ("regular files transferred:", "rx"),
+        ];
+
         let mut lines = Vec::new();
         let fname = log.as_os_str().to_str().unwrap();
         read_file_to_vector(fname, &mut lines);
@@ -81,28 +91,12 @@ fn create_log_summary() {
 
         buffer.push_str(format!("{} | ", fname.split("/").last().unwrap()).as_str());
         for line in lines {
-            let words: Vec<&str> = line.trim_start().split(' ').collect();
-
-            // if words.len() > 6 && words[5] == "files:" {
-            //     buffer.push_str(format!("f {:7} | ", words[6]).as_str());
-            // }
-            if words.len() > 8 && words[7] == "(reg:" {
-                buffer.push_str(format!("rf {:7} | ", words[8]).as_str());
-            }
-            if words.len() > 10 && words[9] == "dir:" {
-                buffer.push_str(format!("d {:7} | ", words[10]).as_str());
-            }
-            if words.len() > 12 && words[11] == "link:" {
-                buffer.push_str(format!("l {:7} | ", words[12]).as_str());
-            }
-            if words.len() > 7 && words[5] == "created" {
-                buffer.push_str(format!("c {:7} | ", words[7]).as_str());
-            }
-            if words.len() > 7 && words[5] == "deleted" {
-                buffer.push_str(format!("dl {:7} | ", words[7]).as_str());
-            }
-            if words.len() > 8 && words[5] == "regular" {
-                buffer.push_str(format!("rx {:7}", words[8]).as_str());
+            for field in fields.iter() {
+                if line.contains(field.0) {
+                    let s: Vec<&str> = line.split(field.0).collect();
+                    let value = s[1].trim_start().split(' ').next().unwrap().trim_end();
+                    buffer.push_str(format!("{} {:7} | ", field.1, value).as_str());
+                }
             }
         }
         writeln!(f, "{}", buffer).expect("Cannot write to file");
@@ -423,4 +417,3 @@ where
 fn show_cursor() {
     execute!(stdout(), cursor::Show).unwrap();
 }
-

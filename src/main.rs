@@ -71,7 +71,7 @@ fn create_log_summary() {
     writeln!(
         f,
         "{}",
-        "legend: f=files, c=created, dl=deleted, rx=reg.xfer"
+        "legend:               | f:   files | c: created | d: deleted | x:reg.xfer |"
     )
     .expect("Cannot write to file");
 
@@ -79,8 +79,8 @@ fn create_log_summary() {
         let fields: Vec<(&str, &str)> = vec![
             ("of files:", "f"),
             ("created files:", "c"),
-            ("deleted files:", "dl"),
-            ("regular files transferred:", "rx"),
+            ("deleted files:", "d"),
+            ("regular files transferred:", "x"),
         ];
 
         let mut lines = Vec::new();
@@ -95,7 +95,7 @@ fn create_log_summary() {
                 if line.contains(field.0) {
                     let s: Vec<&str> = line.split(field.0).collect();
                     let value = s[1].trim_start().split(' ').next().unwrap().trim_end();
-                    buffer.push_str(format!("{} {:7} | ", field.1, value).as_str());
+                    buffer.push_str(format!("{:1}: {:>7} | ", field.1, value).as_str());
                 }
             }
         }

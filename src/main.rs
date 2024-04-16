@@ -69,7 +69,8 @@ fn create_log_summary() {
     }
     log_files.reverse();
 
-    writeln!(f, "{}", "f=files, c=created, d=deleted, rx=reg.xfer").expect("Cannot write to file");
+    // writeln!(f, "{}", "f=files, c=created, d=deleted, rx=reg.xfer").expect("Cannot write to file");
+    writeln!(f, "{}", "legend: rf=files, d=dir, l=links, c=created, dl=deleted, rx=reg.xfer").expect("Cannot write to file");
 
     for log in log_files {
         let mut lines = Vec::new();
@@ -82,14 +83,23 @@ fn create_log_summary() {
         for line in lines {
             let words: Vec<&str> = line.trim_start().split(' ').collect();
 
-            if words.len() > 6 && words[5] == "files:" {
-                buffer.push_str(format!("f {:7} | ", words[6]).as_str());
+            // if words.len() > 6 && words[5] == "files:" {
+            //     buffer.push_str(format!("f {:7} | ", words[6]).as_str());
+            // }
+            if words.len() > 8 && words[7] == "(reg:" {
+                buffer.push_str(format!("rf {:7} | ", words[8]).as_str());
+            }
+            if words.len() > 10 && words[9] == "dir:" {
+                buffer.push_str(format!("d {:7} | ", words[10]).as_str());
+            }
+            if words.len() > 12 && words[11] == "link:" {
+                buffer.push_str(format!("l {:7} | ", words[12]).as_str());
             }
             if words.len() > 7 && words[5] == "created" {
                 buffer.push_str(format!("c {:7} | ", words[7]).as_str());
             }
             if words.len() > 7 && words[5] == "deleted" {
-                buffer.push_str(format!("d {:7} | ", words[7]).as_str());
+                buffer.push_str(format!("dl {:7} | ", words[7]).as_str());
             }
             if words.len() > 8 && words[5] == "regular" {
                 buffer.push_str(format!("rx {:7}", words[8]).as_str());

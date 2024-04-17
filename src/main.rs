@@ -78,18 +78,19 @@ fn create_log_summary() {
         .len();
 
     let mut buf = format!("{:width$}", "legend:", width = (fname_width + 1));
-    buf.push_str("| f:   files | c: created | d: deleted | x:reg.xfer |");
+    buf.push_str("| f:   files | r:     reg | d:     dir | l:    link | c: created | d: deleted | x:reg.xfer |");
 
     writeln!(f, "{}", buf).expect("Cannot write to file");
 
-    for log in log_files {
-        let fields: Vec<(&str, &str)> = vec![
-            ("of files:", "f"),
-            ("created files:", "c"),
-            ("deleted files:", "d"),
-            ("regular files transferred:", "x"),
-        ];
+    let fields: Vec<(&str, &str)> = vec![
+        ("of files:", "f"),
+        ("created files:", "c"),
+        ("deleted files:", "d"),
+        ("regular files transferred:", "x"),
+    ];
+    let subfields: Vec<(&str, &str)> = vec![("reg:", "r"), ("dir:", "d"), ("link:", "l")];
 
+    for log in log_files {
         let mut lines = Vec::new();
         let fname = log.as_os_str().to_str().unwrap();
         read_file_to_vector(fname, &mut lines);
@@ -103,6 +104,23 @@ fn create_log_summary() {
                     let s: Vec<&str> = line.split(field.0).collect();
                     let value = s[1].trim_start().split(' ').next().unwrap().trim_end();
                     buffer.push_str(format!("{:1}: {:>7} | ", field.1, value).as_str());
+                    if field.0 == "of files:" {
+                        for subfield in subfields.iter() {
+                            if line.contains(subfield.0) {
+                                let sf: Vec<&str> = line.split(subfield.0).collect();
+                                let svalue = sf[1]
+                                    .trim_start()
+                                    .split(' ')
+                                    .next()
+                                    .unwrap()
+                                    .trim_end()
+                                    .trim_end_matches([',', ')']);
+                                buffer.push_str(
+                                    format!("{:1}: {:>7} | ", subfield.1, svalue).as_str(),
+                                );
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -26,10 +26,10 @@ fn main() {
     create_log_summary();
 
     let mut log_files = find_log_files()
-        .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir".red()));
+        .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir".dark_red()));
     log_files.sort();
     let last_log_file = log_files.last().unwrap_or_else(|| {
-        println!("{}", "last log file not found".red());
+        println!("{}", "last log file not found".dark_red());
         std::process::exit(1);
     });
 
@@ -178,9 +178,9 @@ fn display_line(i: usize, l: &str) {
     let mut _buff = String::from("");
     let max_width = terminal_width - 14;
     if l.len() > max_width {
-        _buff = format!("{}: {}\r", format!("{:4}", i).red(), &l[..max_width]);
+        _buff = format!("{}: {}\r", format!("{:4}", i).dark_red(), &l[..max_width]);
     } else {
-        _buff = format!("{}: {}\r", format!("{:4}", i).red(), l);
+        _buff = format!("{}: {}\r", format!("{:4}", i).dark_red(), l);
     }
     tui_gen::clear_line();
     println!("{}", _buff);
@@ -194,14 +194,14 @@ fn display_line_grey(i: usize, l: &str) {
     if l.len() > max_width {
         _buff = format!(
             "     {}: {}\r",
-            format!("{:4}", i).red(),
-            (l[..max_width]).to_string().grey()
+            format!("{:4}", i).dark_red(),
+            (l[..max_width]).to_string().dark_grey()
         );
     } else {
         _buff = format!(
             "     {}: {}\r",
-            format!("{:4}", i).red(),
-            l.to_string().grey()
+            format!("{:4}", i).dark_red(),
+            l.to_string().dark_grey()
         );
     }
     tui_gen::clear_line();
@@ -359,7 +359,7 @@ fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
         tui_gen::cursor_move(0, HEADERHEIGHT);
 
         print!(" Select file to display: (");
-        print!("{}", format!("{} logs", v.len()).red());
+        print!("{}", format!("{} logs", v.len()).dark_red());
         println!(")");
         tui_gen::clear_line();
 
@@ -367,7 +367,7 @@ fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
         for (index, item) in v.iter().enumerate().skip(vs.offset).take(vs.display_limit) {
             let buffer = format!("{:?}", item.as_path().file_name().unwrap());
             tui_gen::clear_line();
-            print!("    {}: ", format!("{:5}", index).red());
+            print!("    {}: ", format!("{:5}", index).dark_red());
             if index - vs.offset == vs.current_line {
                 println!(
                     "{} {}",

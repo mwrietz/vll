@@ -60,7 +60,7 @@ fn create_log_summary() {
         .as_os_str()
         .to_str()
         .unwrap()
-        .split("/")
+        .split('/')
         .last()
         .unwrap();
     if last_file == "summary.log" {
@@ -97,7 +97,7 @@ fn create_log_summary() {
 
         let mut buffer = String::from("");
 
-        buffer.push_str(format!("{} | ", fname.split("/").last().unwrap()).as_str());
+        buffer.push_str(format!("{} | ", fname.split('/').last().unwrap()).as_str());
         for line in lines {
             for field in fields.iter() {
                 if line.contains(field.0) {
@@ -423,10 +423,12 @@ fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
 
 fn read_file_to_vector(filename: &str, vector: &mut Vec<String>) {
     if let Ok(lines) = read_lines(filename) {
-        for line in lines {
-            if let Ok(ip) = line {
-                vector.push(ip);
-            }
+        //for line in lines {
+        for line in lines.map_while(Result::ok) {
+            // if let Ok(ip) = line {
+            //     vector.push(ip);
+            // }
+            vector.push(line);
         }
     }
 }

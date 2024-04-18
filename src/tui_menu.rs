@@ -3,13 +3,9 @@ use crossterm::{
     style::{Color, Print, ResetColor, SetBackgroundColor, SetForegroundColor},
 };
 use getch::Getch;
-use std::io;
-use std::io::{stdout, Write};
+use std::io::{self, stdout, Write};
 
-use crate::tui_gen;
-use crate::tui_gen::cursor_move;
-use crate::tui_gen::print_color;
-use crate::tui_gen::tsize;
+use crate::tui_gen::{self, cursor_move, print_color, tsize};
 
 pub fn menu_horiz(items: &[(&str, &str)]) -> char {
     let (_width, height) = tsize();

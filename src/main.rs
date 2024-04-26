@@ -1,7 +1,7 @@
 use std::env;
 use std::fs::{self, File};
-use std::io::{self, stdout, BufRead, Write};
-use std::path::{Path, PathBuf};
+use std::io::{self, stdout, BufRead};
+use std::path::PathBuf;
 
 use crossterm::{
     cursor, execute,
@@ -9,6 +9,7 @@ use crossterm::{
     Result,
 };
 
+mod summarylog;
 mod tui_gen;
 mod tui_menu;
 
@@ -23,7 +24,7 @@ const HEADERHEIGHT: usize = 3;
 const FOOTERHEIGHT: usize = 2;
 
 fn main() {
-    create_log_summary();
+    let _ = summarylog::create_summary_log();
 
     let mut log_files = find_log_files()
         .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir".dark_red()));
@@ -45,86 +46,6 @@ fn main() {
     loop {
         let log_file = &select_log_file(&log_files, &mut vs);
         display_log_file(log_file);
-    }
-}
-
-fn create_log_summary() {
-    let mut f = File::create("summary.log").expect("Cannot create file");
-
-    let mut log_files =
-        find_log_files().unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir"));
-    log_files.sort();
-    let last_file = log_files
-        .last()
-        .unwrap()
-        .as_os_str()
-        .to_str()
-        .unwrap()
-        .split('/')
-        .last()
-        .unwrap();
-    if last_file == "summary.log" {
-        log_files.pop();
-    }
-    log_files.reverse();
-
-    let fname_width = log_files[0]
-        .as_os_str()
-        .to_str()
-        .unwrap()
-        .split('/')
-        .last()
-        .unwrap()
-        .len();
-
-    let mut buf = format!("{:width$}", "legend:", width = (fname_width + 1));
-    buf.push_str("| f:   files | r:     reg | d:     dir | l:    link | c: created | d: deleted | x:reg.xfer |");
-
-    writeln!(f, "{}", buf).expect("Cannot write to file");
-
-    let fields: Vec<(&str, &str)> = vec![
-        ("of files:", "f"),
-        ("created files:", "c"),
-        ("deleted files:", "d"),
-        ("regular files transferred:", "x"),
-    ];
-    let subfields: Vec<(&str, &str)> = vec![("reg:", "r"), ("dir:", "d"), ("link:", "l")];
-
-    for log in log_files {
-        let mut lines = Vec::new();
-        let fname = log.as_os_str().to_str().unwrap();
-        read_file_to_vector(fname, &mut lines);
-
-        let mut buffer = String::from("");
-
-        buffer.push_str(format!("{} | ", fname.split('/').last().unwrap()).as_str());
-        for line in lines {
-            for field in fields.iter() {
-                if line.contains(field.0) {
-                    let s: Vec<&str> = line.split(field.0).collect();
-                    let value = s[1].trim_start().split(' ').next().unwrap().trim_end();
-                    buffer.push_str(format!("{:1}: {:>7} | ", field.1, value).as_str());
-                    if field.0 == "of files:" {
-                        for subfield in subfields.iter() {
-                            if line.contains(subfield.0) {
-                                let sf: Vec<&str> = line.split(subfield.0).collect();
-                                let svalue = sf[1]
-                                    .trim_start()
-                                    .split(' ')
-                                    .next()
-                                    .unwrap()
-                                    .trim_end()
-                                    .trim_end_matches([',', ')']);
-                                buffer.push_str(
-                                    format!("{:1}: {:>7} | ", subfield.1, svalue).as_str(),
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        writeln!(f, "{}", buffer).expect("Cannot write to file");
     }
 }
 
@@ -419,26 +340,6 @@ fn select_log_file(vector: &[PathBuf], vs: &mut ViewStatus) -> PathBuf {
     }
 
     v.get(vs.offset + vs.current_line).unwrap().to_path_buf()
-}
-
-fn read_file_to_vector(filename: &str, vector: &mut Vec<String>) {
-    if let Ok(lines) = read_lines(filename) {
-        //for line in lines {
-        for line in lines.map_while(Result::ok) {
-            // if let Ok(ip) = line {
-            //     vector.push(ip);
-            // }
-            vector.push(line);
-        }
-    }
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
 }
 
 fn show_cursor() {

@@ -1,5 +1,5 @@
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::{self, Error, Read, Write};
 use std::sync::Mutex;
@@ -25,6 +25,7 @@ pub fn create_summary_log() -> Result<(), Error> {
         .split('/')
         .last()
         .unwrap();
+
     if last_file == "summary.log" {
         log_files.pop();
     }
@@ -42,7 +43,7 @@ pub fn create_summary_log() -> Result<(), Error> {
     if let Err(err) = sort_and_rewrite_file("summary.log") {
         eprintln!("Error sorting and rewriting file: {}", err);
     } else {
-        println!("Successfully sorted and rewrote file: {}", "summary.log");
+        println!("Successfully sorted and rewrote file: summary.log");
     }
 
     Ok(())
@@ -59,7 +60,7 @@ fn find_log_files() -> io::Result<Vec<PathBuf>> {
     Ok(log_files)
 }
 
-fn write_summary_log_header(filename: &PathBuf) -> Result<(), Error> {
+fn write_summary_log_header(filename: &Path) -> Result<(), Error> {
     
     // Determine field width for filenames
     let fname_width = filename 
@@ -75,7 +76,7 @@ fn write_summary_log_header(filename: &PathBuf) -> Result<(), Error> {
     buf.push_str("| f:   files | r:     reg | d:     dir | l:    link | c: created | d: deleted | x:reg.xfer |");
 
     // Acquire the lock on the log file
-    let mut lock = LOG_FILE.lock().unwrap();
+    let mut lock = LOG_FILE.lock().expect("cannot acquire lock on log file");
 
     // Write the header line to the log file
     writeln!(lock, "{}", buf)?;
@@ -83,10 +84,10 @@ fn write_summary_log_header(filename: &PathBuf) -> Result<(), Error> {
     Ok(())
 }
 
-fn process_log_file(filename: &PathBuf) -> Result<(), Error> {
+fn process_log_file(filename: &Path) -> Result<(), Error> {
 
     // Open the file for reading
-    let mut file = File::open(filename.clone())?;
+    let mut file = File::open(filename)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
@@ -132,7 +133,7 @@ fn process_log_file(filename: &PathBuf) -> Result<(), Error> {
     }
 
     // Acquire the lock on the log file
-    let mut lock = LOG_FILE.lock().unwrap();
+    let mut lock = LOG_FILE.lock().expect("cannot acquire lock on log file");
 
     // Write the processed content to the log file
     writeln!(lock, "{}", buffer)?;

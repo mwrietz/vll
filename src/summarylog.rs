@@ -1,19 +1,18 @@
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::env;
-use std::path::{Path, PathBuf};
 use std::fs::{self, File};
 use std::io::{self, Error, Read, Write};
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 lazy_static::lazy_static! {
   static ref LOG_FILE: Mutex<File> = Mutex::new(File::create("summary.log").unwrap());
 }
 
 pub fn create_summary_log() -> Result<(), Error> {
-
     // Get list of files to process
-    let mut log_files = find_log_files()
-        .unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir"));
+    let mut log_files =
+        find_log_files().unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir"));
     log_files.sort();
 
     let last_file = log_files
@@ -33,7 +32,7 @@ pub fn create_summary_log() -> Result<(), Error> {
 
     // Print header line to summary.log
     let _ = write_summary_log_header(&log_files[0]);
-    
+
     // Process files in parallel
     log_files.into_par_iter().for_each(|file| {
         process_log_file(&file).unwrap();
@@ -61,9 +60,8 @@ fn find_log_files() -> io::Result<Vec<PathBuf>> {
 }
 
 fn write_summary_log_header(filename: &Path) -> Result<(), Error> {
-    
     // Determine field width for filenames
-    let fname_width = filename 
+    let fname_width = filename
         .as_os_str()
         .to_str()
         .unwrap()
@@ -85,7 +83,6 @@ fn write_summary_log_header(filename: &Path) -> Result<(), Error> {
 }
 
 fn process_log_file(filename: &Path) -> Result<(), Error> {
-
     // Open the file for reading
     let mut file = File::open(filename)?;
     let mut contents = String::new();
@@ -99,7 +96,7 @@ fn process_log_file(filename: &Path) -> Result<(), Error> {
     ];
     let subfields: Vec<(&str, &str)> = vec![("reg:", "r"), ("dir:", "d"), ("link:", "l")];
 
-    // Process the content 
+    // Process the content
     let mut buffer = String::from("");
     let lines: Vec<&str> = contents.lines().collect();
     let fname = filename.as_os_str().to_str().unwrap();
@@ -122,9 +119,7 @@ fn process_log_file(filename: &Path) -> Result<(), Error> {
                                 .unwrap()
                                 .trim_end()
                                 .trim_end_matches([',', ')']);
-                            buffer.push_str(
-                                format!("{:1}: {:>7} | ", subfield.1, svalue).as_str(),
-                            );
+                            buffer.push_str(format!("{:1}: {:>7} | ", subfield.1, svalue).as_str());
                         }
                     }
                 }
@@ -154,4 +149,3 @@ fn sort_and_rewrite_file(file_path: &str) -> Result<(), Error> {
 
     Ok(())
 }
-

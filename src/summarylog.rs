@@ -15,6 +15,11 @@ pub fn create_summary_log() -> Result<(), Error> {
         find_log_files().unwrap_or_else(|_| panic!("{}", "log files not found - cd to log dir"));
     log_files.sort();
 
+    if log_files.len() < 1 {
+        println!("\nNo log files found in current directory. Change to log directory before running.\n");
+        std::process::exit(1);
+    }
+
     let last_file = log_files
         .last()
         .unwrap()

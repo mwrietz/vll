@@ -16,7 +16,9 @@ pub fn create_summary_log() -> Result<(), Error> {
     log_files.sort();
 
     if log_files.len() < 1 {
-        println!("\nNo log files found in current directory. Change to log directory before running.\n");
+        println!(
+            "\nNo log files found in current directory. Change to log directory before running.\n"
+        );
         std::process::exit(1);
     }
 
@@ -94,10 +96,10 @@ fn process_log_file(filename: &Path) -> Result<(), Error> {
     file.read_to_string(&mut contents)?;
 
     let fields: Vec<(&str, &str)> = vec![
-        ("of files:", "f"),
-        ("created files:", "c"),
-        ("deleted files:", "d"),
-        ("regular files transferred:", "x"),
+        ("Number of files:", "f"),
+        ("Number of created files:", "c"),
+        ("Number of deleted files:", "d"),
+        ("Number of regular files transferred:", "x"),
     ];
     let subfields: Vec<(&str, &str)> = vec![("reg:", "r"), ("dir:", "d"), ("link:", "l")];
 
@@ -113,7 +115,7 @@ fn process_log_file(filename: &Path) -> Result<(), Error> {
                 let s: Vec<&str> = line.split(field.0).collect();
                 let value = s[1].trim_start().split(' ').next().unwrap().trim_end();
                 buffer.push_str(format!("{:1}: {:>7} | ", field.1, value).as_str());
-                if field.0 == "of files:" {
+                if field.0 == "Number of files:" {
                     for subfield in subfields.iter() {
                         if line.contains(subfield.0) {
                             let sf: Vec<&str> = line.split(subfield.0).collect();
@@ -126,6 +128,9 @@ fn process_log_file(filename: &Path) -> Result<(), Error> {
                                 .trim_end_matches([',', ')']);
                             buffer.push_str(format!("{:1}: {:>7} | ", subfield.1, svalue).as_str());
                         }
+                    }
+                    if !buffer.contains("l:") {
+                        buffer.push_str("l:       0 | ");
                     }
                 }
             }
